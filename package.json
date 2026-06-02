@@ -1,0 +1,15 @@
+{
+  "name": "adelphos-website",
+  "version": "1.0.0",
+  "description": "Adelphos AI Agency — Self-hosted website with direct lead-to-email pipeline",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "nodemon server.js"
+  },
+  "dependencies": {
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2",
+    "nodemailer": "^6.9.13"
+  }
+}

@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>RAG That Actually Works: Retrieval That Doesn't Hallucinate — Adelphos</title>
+  <meta name="description" content="Most enterprise RAG pipelines fail quietly — confidently citing the wrong document. Here's the architecture and the habits that make retrieval-augmented generation trustworthy." />
+  <link rel="canonical" href="https://adelphostech.com/blog/rag-that-actually-works" />
+
+  <meta property="og:type" content="article" />
+  <meta property="og:url" content="https://adelphostech.com/blog/rag-that-actually-works" />
+  <meta property="og:title" content="RAG That Actually Works: Retrieval That Doesn't Hallucinate — Adelphos" />
+  <meta property="og:description" content="The architecture and habits that make retrieval-augmented generation trustworthy for the enterprise." />
+  <meta property="og:image" content="https://adelphostech.com/favicon-512x512.png" />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="preload" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'" />
+  <noscript><link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" /></noscript>
+  <link rel="stylesheet" href="/style.css?v=13" />
+  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+  <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
+  <link rel="icon" type="image/png" sizes="192x192" href="/favicon-192x192.png" />
+  <link rel="icon" type="image/png" sizes="512x512" href="/favicon-512x512.png" />
+  <link rel="manifest" href="/site.webmanifest" />
+  <link rel="shortcut icon" href="/favicon.ico" />
+</head>
+<body class="article-page__body">
+
+  <nav id="nav-bar" class="nav-bar nav-bar--solid">
+    <a href="/" class="nav-logo"><img src="/logo.png" alt="Adelphos" class="nav-logo__img" width="131" height="52" /></a>
+    <div class="nav-links">
+      <a href="/">Home</a>
+      <a href="/blog">Blog</a>
+      <a href="/simulator">Live Demos</a>
+    </div>
+    <a href="https://wa.me/918866999550" target="_blank" rel="noopener" class="nav-cta">Book a Call</a>
+    <button id="nav-toggle" class="nav-toggle" aria-label="Toggle Menu">
+      <span></span>
+      <span></span>
+      <span></span>
+    </button>
+  </nav>
+
+  <main class="article-page">
+    <a href="/blog" class="article-back">&larr; Back to all articles</a>
+    <header class="article-header">
+      <span class="article-tag">RAG</span>
+      <h1 class="article-title">RAG That Actually Works: Building Retrieval That Doesn't Hallucinate</h1>
+      <div class="article-meta">June 11, 2026 &middot; 9 min read</div>
+    </header>
+
+    <img src="/blog/images/rag-that-actually-works.jpg" alt="Floor-to-ceiling library shelves filled with books, representing a knowledge base" style="width:100%;height:auto;aspect-ratio:2/1;object-fit:cover;border-radius:16px;border:1px solid rgba(255,255,255,.1);margin-bottom:3rem;display:block;" />
+
+    <article class="article-body">
+      <p>Retrieval-augmented generation is the most common way enterprises put their own knowledge behind an LLM. It is also the most commonly broken. A demo that answers three curated questions perfectly can collapse in production — confidently citing the wrong policy, blending two contracts, or inventing a clause that doesn't exist. The model isn't lying; the retrieval layer is feeding it garbage.</p>
+
+      <h2>Why naive RAG fails</h2>
+      <p>The default tutorial pipeline — dump documents, split into fixed-size chunks, embed, fetch top-k by cosine similarity — works just well enough to demo and just badly enough to erode trust. The failure modes are predictable:</p>
+      <ul>
+        <li><strong>Chunk boundaries cut meaning in half:</strong> A 500-token window splits a table from its header or a clause from its definition.</li>
+        <li><strong>Semantic search misses exact terms:</strong> Vector similarity is great for concepts and terrible for part numbers, statute references, and acronyms.</li>
+        <li><strong>Top-k is a blunt instrument:</strong> The right answer might be the 7th result, but you only passed the top 4.</li>
+        <li><strong>No grounding check:</strong> Nothing verifies that the generated answer is actually supported by the retrieved text.</li>
+      </ul>
+
+      <h2>The architecture that holds up</h2>
+      <p>Trustworthy RAG is less about a clever model and more about a disciplined retrieval stack.</p>
+      <h3>1. Chunk with structure, not character counts</h3>
+      <p>Split on semantic boundaries — headings, sections, table rows — and attach metadata (source, section, date) to every chunk. Keep a small overlap so context isn't severed at the seam.</p>
+      <h3>2. Hybrid search beats pure vectors</h3>
+      <p>Combine dense vector search with keyword/BM25 search. The vector side catches paraphrase and concept; the keyword side catches the exact SKU or section number. Fuse the results.</p>
+      <h3>3. Re-rank before you generate</h3>
+      <p>Pull a wide candidate set (say, top 30), then use a cross-encoder re-ranker to score each candidate against the actual query. Pass only the genuinely relevant chunks to the model. This single step removes most hallucinations.</p>
+      <h3>4. Force citations and verify grounding</h3>
+      <p>Require the model to cite the chunk IDs it used, then programmatically check that the claims trace back to retrieved text. If support is missing, return "I don't have that information" instead of guessing. A system that knows when to stay silent is worth more than one that's confidently wrong.</p>
+
+      <h2>Measure retrieval, not vibes</h2>
+      <p>You cannot improve what you don't measure. Build a small evaluation set of real questions with known-correct source passages, then track <strong>retrieval recall</strong> (did we fetch the right chunk?) separately from <strong>answer faithfulness</strong> (did the model stick to it?). Most teams obsess over the model and ignore that 80% of their failures are retrieval misses.</p>
+
+      <h2>Keep sensitive knowledge in-house</h2>
+      <p>RAG means your most valuable documents — contracts, patient records, internal playbooks — are being embedded and queried constantly. Running the embedding model and vector store on infrastructure you control keeps that corpus inside your perimeter, which is exactly where regulated data needs to stay.</p>
+
+      <h2>The takeaway</h2>
+      <p>Good RAG is engineering, not magic. Structured chunking, hybrid retrieval, re-ranking, and grounding checks turn a flaky demo into a system your team will actually trust. The model gets the credit, but the retrieval layer does the work.</p>
+      <p>We design grounded retrieval systems on private infrastructure — so the answers are accurate, cited, and your data never leaves the building.</p>
+    </article>
+  </main>
+
+  <footer class="site-footer">
+    <div class="site-footer__inner">
+      <a href="/" class="nav-logo"><img src="/logo.png" alt="Adelphos" class="nav-logo__img" width="131" height="52" /></a>
+      <div class="site-footer__contact">
+        <a href="mailto:info@adelphostech.com" class="site-footer__link">info@adelphostech.com</a>
+        <span class="site-footer__dot">&middot;</span>
+        <a href="tel:+918866999550" class="site-footer__link">+91 88669 99550</a>
+      </div>
+      <p class="site-footer__copy">&copy; 2026 Adelphos. All rights reserved.</p>
+    </div>
+  </footer>
+
+  <script>
+    const navToggle = document.getElementById('nav-toggle');
+    const navLinks = document.querySelector('.nav-links');
+    if (navToggle && navLinks) {
+      navToggle.addEventListener('click', () => {
+        navToggle.classList.toggle('is-active');
+        navLinks.classList.toggle('is-active');
+      });
+    }
+  </script>
+</body>
+</html>

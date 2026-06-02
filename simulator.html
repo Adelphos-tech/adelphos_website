@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Adelphos — See AI in Action</title>
+  <meta name="description" content="Try our interactive voice agent and AI maturity simulator. Experience zero-latency conversational AI and test your organization's readiness." />
+  <link rel="canonical" href="https://adelphostech.com/simulator" />
+
+  <!-- Open Graph / Facebook -->
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="https://adelphostech.com/simulator" />
+  <meta property="og:title" content="Adelphos — See AI in Action" />
+  <meta property="og:description" content="Try our interactive voice agent and AI maturity simulator. Experience zero-latency conversational AI and test your organization's readiness." />
+  <meta property="og:image" content="https://adelphostech.com/favicon-512x512.png" />
+
+  <!-- Twitter -->
+  <meta property="twitter:card" content="summary_large_image" />
+  <meta property="twitter:url" content="https://adelphostech.com/simulator" />
+  <meta property="twitter:title" content="Adelphos — See AI in Action" />
+  <meta property="twitter:description" content="Try our interactive voice agent and AI maturity simulator. Experience zero-latency conversational AI and test your organization's readiness." />
+  <meta property="twitter:image" content="https://adelphostech.com/favicon-512x512.png" />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="preload" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'" />
+  <noscript><link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" /></noscript>
+  <link rel="stylesheet" href="style.css?v=13" />
+  <link rel="stylesheet" href="simulator.css" />
+  <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png" />
+  <link rel="icon" type="image/png" sizes="32x32" href="favicon-32x32.png" />
+  <link rel="icon" type="image/png" sizes="192x192" href="favicon-192x192.png" />
+  <link rel="icon" type="image/png" sizes="512x512" href="favicon-512x512.png" />
+  <link rel="manifest" href="site.webmanifest" />
+  <link rel="shortcut icon" href="favicon.ico" />
+</head>
+<body class="sim-page">
+
+  <nav id="nav-bar" class="nav-bar nav-bar--solid">
+    <a href="/" class="nav-logo"><img src="logo.png" alt="Adelphos" class="nav-logo__img" width="131" height="52" /></a>
+    <div class="nav-links"><a href="/">← Back to Site</a><a href="/blog">Blog</a></div>
+    <a href="https://wa.me/918866999550" target="_blank" rel="noopener" class="nav-cta">Book a Call</a>
+  </nav>
+
+  <main class="sim-wrapper">
+
+    <header class="sim-header">
+      <span class="audit-tag">INTERACTIVE DEMO</span>
+      <h1 class="sim-title">See Our AI in Action</h1>
+      <p class="sim-subtitle">Choose a workflow below and watch our AI handle it — step by step, in plain English.</p>
+    </header>
+
+    <!-- Tab Switcher -->
+    <div class="demo-tabs">
+      <button class="demo-tab active" data-demo="rag">
+        <i data-lucide="search" class="tab-icon-svg"></i> Knowledge Search
+      </button>
+      <button class="demo-tab" data-demo="crm">
+        <i data-lucide="mail" class="tab-icon-svg"></i> Email Routing
+      </button>
+      <button class="demo-tab" data-demo="automation">
+        <i data-lucide="git-branch" class="tab-icon-svg"></i> Workflow Automation
+      </button>
+    </div>
+
+    <!-- Demo Card -->
+    <div class="demo-card">
+      <div class="demo-scenario" id="demo-scenario"></div>
+      <div class="flow-wrap" id="flow-wrap"></div>
+      <div class="demo-output hidden" id="demo-output"></div>
+      <div class="benefit-card hidden" id="benefit-card"></div>
+      <div class="demo-controls">
+        <button id="btn-run" class="cta-button">▶&nbsp; Run Demo</button>
+        <button id="btn-reset" class="btn-ghost">Reset</button>
+      </div>
+    </div>
+
+  </main>
+
+  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+  <script src="simulator.js"></script>
+</body>
+</html>
