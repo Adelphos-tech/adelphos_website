@@ -18,13 +18,25 @@ jobs:
           username: root
           password: ${{ secrets.SSH_PASSWORD }}
           script: |
+            set -e
             cd /var/www/adelphos_frontend
+            echo "=== Git status before ==="
+            git status
+            echo "=== Fetching origin ==="
             git fetch origin
-            git reset --hard origin/$(git rev-parse --abbrev-ref HEAD)
+            echo "=== Resetting to origin/main ==="
+            git reset --hard origin/main
+            echo "=== Git status after ==="
+            git status
+            echo "=== Verifying blog files ==="
+            ls -la blog/ | head -20
+            echo "=== Installing deps ==="
             npm install --production
-            # Restart the adelphos website (port 4000) — NOT the autobug process
+            echo "=== Restarting server ==="
             if command -v pm2 &> /dev/null; then
               pm2 restart adelphos-website || pm2 start server.js --name adelphos-website --cwd /var/www/adelphos_frontend
+              pm2 save
             else
               echo "PM2 not found — server will need manual restart"
             fi
+            echo "=== Done ==="
