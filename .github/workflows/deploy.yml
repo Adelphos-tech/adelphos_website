@@ -16,7 +16,7 @@ jobs:
         with:
           host: 156.67.105.64
           username: root
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          password: ${{ secrets.SSH_PASSWORD }}
           script: |
             cd /var/www/adelphos_frontend
             git fetch origin
