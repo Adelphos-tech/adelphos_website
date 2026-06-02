@@ -42,7 +42,12 @@
     </button>
   </nav>
 
-  <main class="article-page">
+  <main class="article-page article-page--with-toc">
+    <aside class="article-toc">
+      <div class="article-toc__title">On this page</div>
+      <ul class="article-toc__list" id="toc-list"></ul>
+    </aside>
+
     <a href="/blog" class="article-back">&larr; Back to all articles</a>
     <header class="article-header">
       <span class="article-tag">AI Agents</span>
@@ -101,6 +106,40 @@
         navLinks.classList.toggle('is-active');
       });
     }
+
+  // Auto-generate Table of Contents + scroll spy
+  (function() {
+    const tocList = document.getElementById('toc-list');
+    const articleBody = document.querySelector('.article-body');
+    if (!tocList || !articleBody) return;
+
+    const headings = articleBody.querySelectorAll('h2, h3');
+    headings.forEach((h, i) => {
+      const id = 'section-' + i;
+      h.id = id;
+      const li = document.createElement('li');
+      li.className = 'article-toc__item';
+      const a = document.createElement('a');
+      a.className = 'article-toc__link' + (h.tagName === 'H3' ? ' article-toc__link--h3' : '');
+      a.href = '#' + id;
+      a.textContent = h.textContent;
+      li.appendChild(a);
+      tocList.appendChild(li);
+    });
+
+    const tocLinks = tocList.querySelectorAll('a');
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          tocLinks.forEach(l => l.classList.remove('is-active'));
+          const active = tocList.querySelector('a[href="#' + entry.target.id + '"]');
+          if (active) active.classList.add('is-active');
+        }
+      });
+    }, { rootMargin: '-20% 0px -60% 0px', threshold: 0 });
+
+    headings.forEach(h => observer.observe(h));
+  })();
   </script>
 </body>
 </html>
