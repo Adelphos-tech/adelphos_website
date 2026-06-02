@@ -22,9 +22,9 @@ jobs:
             git fetch origin
             git reset --hard origin/$(git rev-parse --abbrev-ref HEAD)
             npm install --production
-            # Restart the app if PM2 is available, otherwise skip
+            # Restart the adelphos website (port 4000) — NOT the autobug process
             if command -v pm2 &> /dev/null; then
-              pm2 restart adelphos || pm2 start server.js --name adelphos
+              pm2 restart adelphos-website || pm2 start server.js --name adelphos-website --cwd /var/www/adelphos_frontend
             else
               echo "PM2 not found — server will need manual restart"
             fi
