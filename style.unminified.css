@@ -819,7 +819,7 @@ body { overflow-x: hidden; background: var(--dark); }
    BLOG STYLES
    ══════════════════════════════════════ */
 .blog-page { background: var(--dark); }
-.blog-hero { padding: 10rem 2rem 4rem; text-align: center; background: var(--dark); }
+.blog-hero { padding: 6rem 2rem 3rem; text-align: center; background: var(--dark); }
 .blog-hero__headline { font-size: clamp(2rem, 5vw, 3.5rem); font-weight: 800; letter-spacing: -.03em; color: var(--white); margin-bottom: 1rem; }
 .blog-hero__sub { font-size: clamp(.95rem, 1.5vw, 1.125rem); color: var(--w50); max-width: 600px; margin: 0 auto; }
 .blog-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 2rem; max-width: 1100px; margin: 0 auto; padding: 0 2rem 8rem; }
