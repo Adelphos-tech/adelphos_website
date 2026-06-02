@@ -11,7 +11,7 @@
   <meta property="og:url" content="https://adelphostech.com/blog/rag-that-actually-works" />
   <meta property="og:title" content="RAG That Actually Works: Retrieval That Doesn't Hallucinate — Adelphos" />
   <meta property="og:description" content="The architecture and habits that make retrieval-augmented generation trustworthy for the enterprise." />
-  <meta property="og:image" content="https://adelphostech.com/favicon-512x512.png" />
+  <meta property="og:image" content="https://adelphostech.com/blog/images/rag-that-actually-works.jpg" />
 
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -24,6 +24,32 @@
   <link rel="icon" type="image/png" sizes="512x512" href="/favicon-512x512.png" />
   <link rel="manifest" href="/site.webmanifest" />
   <link rel="shortcut icon" href="/favicon.ico" />
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Article",
+    "headline": "RAG That Actually Works: Retrieval That Doesn't Hallucinate",
+    "description": "How to build a retrieval-augmented generation pipeline that stays grounded in your data.",
+    "image": "https://adelphostech.com/blog/images/rag-that-actually-works.jpg",
+    "datePublished": "2026-06-11",
+    "dateModified": "2026-06-11",
+    "author": {
+      "@type": "Organization",
+      "name": "Adelphos Technologies",
+      "url": "https://adelphostech.com"
+    },
+    "publisher": {
+      "@type": "Organization",
+      "name": "Adelphos Technologies",
+      "url": "https://adelphostech.com",
+      "logo": {
+        "@type": "ImageObject",
+        "url": "https://adelphostech.com/logo.png"
+      }
+    },
+    "mainEntityOfPage": "https://adelphostech.com/blog/rag-that-actually-works"
+  }
+  </script>
 </head>
 <body class="article-page__body">
 
@@ -89,6 +115,15 @@
       <h2>The takeaway</h2>
       <p>Good RAG is engineering, not magic. Structured chunking, hybrid retrieval, re-ranking, and grounding checks turn a flaky demo into a system your team will actually trust. The model gets the credit, but the retrieval layer does the work.</p>
       <p>We design grounded retrieval systems on private infrastructure — so the answers are accurate, cited, and your data never leaves the building.</p>
+
+      <div style="margin-top:3rem;padding:2rem;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.08);border-radius:16px;text-align:center;">
+        <p style="margin:0 0 .4rem;font-size:.75rem;font-weight:700;letter-spacing:.15em;text-transform:uppercase;color:var(--w40);">Stay ahead of the curve</p>
+        <p style="margin:0 0 1.25rem;font-size:1.05rem;font-weight:600;color:var(--white);">Get our next deep-dive in your inbox</p>
+        <form action="https://formspree.io/f/xpwzgkqv" method="POST" style="display:flex;gap:.75rem;max-width:420px;margin:0 auto;" onsubmit="this.querySelector('button').textContent='Subscribed ✓';this.querySelector('button').disabled=true;">
+          <input type="email" name="email" required placeholder="your@company.com" style="flex:1;padding:.6rem 1rem;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);border-radius:8px;color:var(--white);font-size:.9rem;outline:none;" />
+          <button type="submit" style="padding:.6rem 1.2rem;background:var(--accent-l);color:#000;font-weight:700;font-size:.88rem;border:none;border-radius:8px;cursor:pointer;white-space:nowrap;">Subscribe</button>
+        </form>
+      </div>
     </article>
   </main>
 
