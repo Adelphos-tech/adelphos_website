@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" style="scroll-behavior:smooth">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -17,7 +17,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link rel="preload" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'" />
   <noscript><link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" /></noscript>
-  <link rel="stylesheet" href="/style.css?v=14" />
+  <link rel="stylesheet" href="/style.css?v=15" />
   <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
   <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
   <link rel="icon" type="image/png" sizes="192x192" href="/favicon-192x192.png" />
@@ -42,12 +42,12 @@
     </button>
   </nav>
 
-  <main class="article-page article-page--with-toc">
-    <aside class="article-toc">
+  <aside class="article-toc">
       <div class="article-toc__title">On this page</div>
       <ul class="article-toc__list" id="toc-list"></ul>
     </aside>
 
+  <main class="article-page">
     <a href="/blog" class="article-back">&larr; Back to all articles</a>
     <header class="article-header">
       <span class="article-tag">Sovereign AI</span>
@@ -103,38 +103,43 @@
       });
     }
 
-  // Auto-generate Table of Contents + scroll spy
+  // Table of Contents – auto-generate + scroll spy + smooth scroll
   (function() {
-    const tocList = document.getElementById('toc-list');
-    const articleBody = document.querySelector('.article-body');
+    var tocList = document.getElementById('toc-list');
+    var articleBody = document.querySelector('.article-body');
     if (!tocList || !articleBody) return;
 
-    const headings = articleBody.querySelectorAll('h2, h3');
-    headings.forEach((h, i) => {
-      const id = 'section-' + i;
+    var headings = articleBody.querySelectorAll('h2, h3');
+    headings.forEach(function(h, i) {
+      var id = 'section-' + i;
       h.id = id;
-      const li = document.createElement('li');
+      var li = document.createElement('li');
       li.className = 'article-toc__item';
-      const a = document.createElement('a');
+      var a = document.createElement('a');
       a.className = 'article-toc__link' + (h.tagName === 'H3' ? ' article-toc__link--h3' : '');
       a.href = '#' + id;
       a.textContent = h.textContent;
+      a.addEventListener('click', function(e) {
+        e.preventDefault();
+        var target = document.getElementById(id);
+        if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      });
       li.appendChild(a);
       tocList.appendChild(li);
     });
 
-    const tocLinks = tocList.querySelectorAll('a');
-    const observer = new IntersectionObserver((entries) => {
-      entries.forEach(entry => {
+    var tocLinks = Array.from(tocList.querySelectorAll('a'));
+    var observer = new IntersectionObserver(function(entries) {
+      entries.forEach(function(entry) {
         if (entry.isIntersecting) {
-          tocLinks.forEach(l => l.classList.remove('is-active'));
-          const active = tocList.querySelector('a[href="#' + entry.target.id + '"]');
+          tocLinks.forEach(function(l) { l.classList.remove('is-active'); });
+          var active = tocList.querySelector('a[href="#' + entry.target.id + '"]');
           if (active) active.classList.add('is-active');
         }
       });
-    }, { rootMargin: '-20% 0px -60% 0px', threshold: 0 });
+    }, { rootMargin: '-10% 0px -70% 0px', threshold: 0 });
 
-    headings.forEach(h => observer.observe(h));
+    headings.forEach(function(h) { observer.observe(h); });
   })();
   </script>
 </body>
