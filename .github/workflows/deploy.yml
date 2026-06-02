@@ -1,0 +1,30 @@
+name: Deploy to VPS
+
+on:
+  push:
+    branches: [main, master]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Deploy to server via SSH
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: 156.67.105.64
+          username: root
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            cd /var/www/adelphos_frontend
+            git fetch origin
+            git reset --hard origin/$(git rev-parse --abbrev-ref HEAD)
+            npm install --production
+            # Restart the app if PM2 is available, otherwise skip
+            if command -v pm2 &> /dev/null; then
+              pm2 restart adelphos || pm2 start server.js --name adelphos
+            else
+              echo "PM2 not found — server will need manual restart"
+            fi
