@@ -93,6 +93,27 @@
             </div>
             <div class="stat-card__value" id="card-users">—</div>
           </div>
+          <div class="stat-card stat-card--blue">
+            <div class="stat-card__meta">
+              <span class="stat-card__label">Page Views</span>
+              <span class="stat-card__period">GA4</span>
+            </div>
+            <div class="stat-card__value" id="card-views">—</div>
+          </div>
+          <div class="stat-card stat-card--green">
+            <div class="stat-card__meta">
+              <span class="stat-card__label">Avg Duration</span>
+              <span class="stat-card__period">GA4</span>
+            </div>
+            <div class="stat-card__value" id="card-duration">—</div>
+          </div>
+          <div class="stat-card stat-card--purple">
+            <div class="stat-card__meta">
+              <span class="stat-card__label">Bounce Rate</span>
+              <span class="stat-card__period">GA4</span>
+            </div>
+            <div class="stat-card__value" id="card-bounce">—</div>
+          </div>
         </section>
 
         <!-- Dashboard Charts Row -->
@@ -262,6 +283,106 @@
       <section class="section-panel" id="analytics">
         <div id="ga4-notice" class="notice notice--warning hidden"></div>
 
+        <!-- Daily Sessions Line Chart -->
+        <div class="panel">
+          <div class="panel__header">
+            <div>
+              <h2 class="panel__title">Daily Traffic</h2>
+              <p class="panel__subtitle">Sessions and active users over time</p>
+            </div>
+          </div>
+          <div class="chart-row">
+            <div class="chart-card">
+              <div class="chart-canvas-wrap" style="height:320px;">
+                <canvas id="ga4-daily-chart"></canvas>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Traffic Sources + Devices -->
+        <div class="dashboard-tables">
+          <div class="panel">
+            <div class="panel__header">
+              <div>
+                <h2 class="panel__title">Traffic Sources</h2>
+                <p class="panel__subtitle">Where visitors come from</p>
+              </div>
+            </div>
+            <div class="table-wrap">
+              <table class="data-table" id="ga4-sources-table">
+                <thead>
+                  <tr><th>Channel</th><th>Sessions</th></tr>
+                </thead>
+                <tbody id="ga4-sources-body">
+                  <tr><td colspan="2" class="loading-cell">Loading...</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="panel">
+            <div class="panel__header">
+              <div>
+                <h2 class="panel__title">Devices</h2>
+                <p class="panel__subtitle">Desktop, mobile, tablet breakdown</p>
+              </div>
+            </div>
+            <div class="table-wrap">
+              <table class="data-table" id="ga4-devices-table">
+                <thead>
+                  <tr><th>Device</th><th>Sessions</th></tr>
+                </thead>
+                <tbody id="ga4-devices-body">
+                  <tr><td colspan="2" class="loading-cell">Loading...</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- Countries + User Types -->
+        <div class="dashboard-tables">
+          <div class="panel">
+            <div class="panel__header">
+              <div>
+                <h2 class="panel__title">Top Countries</h2>
+                <p class="panel__subtitle">Geographic distribution of visitors</p>
+              </div>
+            </div>
+            <div class="table-wrap">
+              <table class="data-table" id="ga4-countries-table">
+                <thead>
+                  <tr><th>Country</th><th>Sessions</th></tr>
+                </thead>
+                <tbody id="ga4-countries-body">
+                  <tr><td colspan="2" class="loading-cell">Loading...</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="panel">
+            <div class="panel__header">
+              <div>
+                <h2 class="panel__title">New vs Returning</h2>
+                <p class="panel__subtitle">Visitor retention breakdown</p>
+              </div>
+            </div>
+            <div class="table-wrap">
+              <table class="data-table" id="ga4-usertypes-table">
+                <thead>
+                  <tr><th>Type</th><th>Sessions</th></tr>
+                </thead>
+                <tbody id="ga4-usertypes-body">
+                  <tr><td colspan="2" class="loading-cell">Loading...</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- Events -->
         <div class="panel">
           <div class="panel__header">
             <div>
@@ -288,6 +409,7 @@
           </div>
         </div>
 
+        <!-- Top Pages -->
         <div class="panel">
           <div class="panel__header">
             <div>

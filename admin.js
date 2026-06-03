@@ -66,6 +66,25 @@
     if (isNaN(num)) return n;
     return num.toLocaleString('en-IN');
   }
+  function fmtDuration(sec) {
+    if (sec == null || sec === '') return '—';
+    const s = parseFloat(sec);
+    if (isNaN(s)) return sec;
+    const m = Math.floor(s / 60);
+    const r = Math.round(s % 60);
+    return m > 0 ? `${m}m ${r}s` : `${r}s`;
+  }
+  function fmtPercent(val) {
+    if (val == null || val === '') return '—';
+    const v = parseFloat(val);
+    if (isNaN(v)) return val;
+    return (v * 100).toFixed(1) + '%';
+  }
+  function fmtShortDate(iso) {
+    if (!iso) return '';
+    const d = new Date(iso + 'T00:00:00');
+    return d.toLocaleDateString('en-IN', { day: 'numeric', month: 'short' });
+  }
 
   // ── Load everything ──────────────────────────────────────────────────────
   async function loadAll() {
@@ -291,11 +310,24 @@
   // ── GA4 ──────────────────────────────────────────────────────────────────
   async function loadAnalytics() {
     const notice = document.getElementById('ga4-notice');
-    const pBody = document.getElementById('ga4-pages-body');
-    const eBody = document.getElementById('ga4-events-body');
+    const pBody   = document.getElementById('ga4-pages-body');
+    const eBody   = document.getElementById('ga4-events-body');
+    const sBody   = document.getElementById('ga4-sources-body');
+    const dBody   = document.getElementById('ga4-devices-body');
+    const cBody   = document.getElementById('ga4-countries-body');
+    const uBody   = document.getElementById('ga4-usertypes-body');
     const dashPagesBody = document.getElementById('dashboard-pages-body');
-    pBody.innerHTML = '<tr><td colspan="3" class="loading-cell">Loading GA4 data...</td></tr>';
-    eBody.innerHTML = '<tr><td colspan="2" class="loading-cell">Loading GA4 data...</td></tr>';
+
+    const loading = '<tr><td colspan="2" class="loading-cell">Loading...</td></tr>';
+    const loading3 = '<tr><td colspan="3" class="loading-cell">Loading GA4 data...</td></tr>';
+    const loading2 = '<tr><td colspan="2" class="loading-cell">Loading GA4 data...</td></tr>';
+
+    pBody.innerHTML = loading3;
+    eBody.innerHTML = loading2;
+    sBody.innerHTML = loading;
+    dBody.innerHTML = loading;
+    cBody.innerHTML = loading;
+    uBody.innerHTML = loading;
     dashPagesBody.innerHTML = '<tr><td colspan="3" class="loading-cell">Loading...</td></tr>';
 
     try {
@@ -304,8 +336,10 @@
         const j = await res.json();
         notice.textContent = j.error || 'Google credentials not configured.';
         notice.classList.remove('hidden');
+        const nc = '<tr><td colspan="2" class="loading-cell">Not configured.</td></tr>';
         pBody.innerHTML = '<tr><td colspan="3" class="loading-cell">Not configured.</td></tr>';
-        eBody.innerHTML = '<tr><td colspan="2" class="loading-cell">Not configured.</td></tr>';
+        eBody.innerHTML = nc; sBody.innerHTML = nc; dBody.innerHTML = nc;
+        cBody.innerHTML = nc; uBody.innerHTML = nc;
         dashPagesBody.innerHTML = '<tr><td colspan="3" class="loading-cell">Not configured.</td></tr>';
         clearGa4Cards();
         ga4DataCache = null;
@@ -316,11 +350,14 @@
       ga4DataCache = data;
       notice.classList.add('hidden');
 
-      // Cards
-      document.getElementById('card-sessions').textContent = fmtNum(data.overview?.sessions);
-      document.getElementById('card-users').textContent = fmtNum(data.overview?.activeUsers);
+      // ── Cards ──
+      document.getElementById('card-sessions').textContent   = fmtNum(data.overview?.sessions);
+      document.getElementById('card-users').textContent      = fmtNum(data.overview?.activeUsers);
+      document.getElementById('card-views').textContent      = fmtNum(data.overview?.screenPageViews);
+      document.getElementById('card-duration').textContent     = fmtDuration(data.overview?.averageSessionDuration);
+      document.getElementById('card-bounce').textContent     = fmtPercent(data.overview?.bounceRate);
 
-      // Dashboard pages (top 5)
+      // ── Dashboard pages (top 5) ──
       if (!data.topPages?.length) {
         dashPagesBody.innerHTML = '<tr><td colspan="3" class="loading-cell">No data.</td></tr>';
       } else {
@@ -333,7 +370,7 @@
         `).join('');
       }
 
-      // Analytics section — Pages table
+      // ── Analytics section — Pages table ──
       if (!data.topPages?.length) {
         pBody.innerHTML = '<tr><td colspan="3" class="loading-cell">No data for this period.</td></tr>';
       } else {
@@ -346,26 +383,62 @@
         `).join('');
       }
 
-      // Analytics section — Events table
+      // ── Events table ──
       if (!data.events?.length) {
         eBody.innerHTML = '<tr><td colspan="2" class="loading-cell">No events for this period.</td></tr>';
       } else {
         eBody.innerHTML = data.events.map(e => `
-          <tr>
-            <td>${escapeHtml(e.name)}</td>
-            <td>${fmtNum(e.count)}</td>
-          </tr>
+          <tr><td>${escapeHtml(e.name)}</td><td>${fmtNum(e.count)}</td></tr>
         `).join('');
       }
 
-      // Charts
+      // ── Traffic Sources table ──
+      if (!data.trafficSources?.length) {
+        sBody.innerHTML = '<tr><td colspan="2" class="loading-cell">No data.</td></tr>';
+      } else {
+        sBody.innerHTML = data.trafficSources.map(s => `
+          <tr><td>${escapeHtml(s.source)}</td><td>${fmtNum(s.sessions)}</td></tr>
+        `).join('');
+      }
+
+      // ── Devices table ──
+      if (!data.devices?.length) {
+        dBody.innerHTML = '<tr><td colspan="2" class="loading-cell">No data.</td></tr>';
+      } else {
+        dBody.innerHTML = data.devices.map(d => `
+          <tr><td>${escapeHtml(d.device)}</td><td>${fmtNum(d.sessions)}</td></tr>
+        `).join('');
+      }
+
+      // ── Countries table ──
+      if (!data.countries?.length) {
+        cBody.innerHTML = '<tr><td colspan="2" class="loading-cell">No data.</td></tr>';
+      } else {
+        cBody.innerHTML = data.countries.map(c => `
+          <tr><td>${escapeHtml(c.country)}</td><td>${fmtNum(c.sessions)}</td></tr>
+        `).join('');
+      }
+
+      // ── User Types table ──
+      if (!data.userTypes?.length) {
+        uBody.innerHTML = '<tr><td colspan="2" class="loading-cell">No data.</td></tr>';
+      } else {
+        uBody.innerHTML = data.userTypes.map(u => `
+          <tr><td>${escapeHtml(u.type)}</td><td>${fmtNum(u.sessions)}</td></tr>
+        `).join('');
+      }
+
+      // ── Charts ──
       renderGa4EventsChart('ga4-events-chart', data.events || [], 5);
       renderGa4EventsChart('ga4-events-chart-detail', data.events || [], 8);
+      renderGa4DailyChart(data.daily || []);
     } catch (err) {
       notice.textContent = 'Error loading GA4: ' + err.message;
       notice.classList.remove('hidden');
+      const fail = '<tr><td colspan="2" class="loading-cell">Failed to load.</td></tr>';
       pBody.innerHTML = '<tr><td colspan="3" class="loading-cell">Failed to load.</td></tr>';
-      eBody.innerHTML = '<tr><td colspan="2" class="loading-cell">Failed to load.</td></tr>';
+      eBody.innerHTML = fail; sBody.innerHTML = fail; dBody.innerHTML = fail;
+      cBody.innerHTML = fail; uBody.innerHTML = fail;
       dashPagesBody.innerHTML = '<tr><td colspan="3" class="loading-cell">Failed to load.</td></tr>';
       clearGa4Cards();
       ga4DataCache = null;
@@ -375,6 +448,9 @@
   function clearGa4Cards() {
     document.getElementById('card-sessions').textContent = '—';
     document.getElementById('card-users').textContent = '—';
+    document.getElementById('card-views').textContent = '—';
+    document.getElementById('card-duration').textContent = '—';
+    document.getElementById('card-bounce').textContent = '—';
   }
 
   const ga4ChartInstances = {};
@@ -406,6 +482,63 @@
         plugins: {
           legend: { position: 'right', labels: { color: '#64748b', boxWidth: 12 } },
         },
+      },
+    });
+  }
+
+  function renderGa4DailyChart(daily) {
+    const ctx = document.getElementById('ga4-daily-chart')?.getContext('2d');
+    if (!ctx) return;
+    if (ga4ChartInstances['ga4-daily-chart']) ga4ChartInstances['ga4-daily-chart'].destroy();
+    if (!daily.length) return;
+
+    ga4ChartInstances['ga4-daily-chart'] = new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels: daily.map(d => fmtShortDate(d.date)),
+        datasets: [
+          {
+            label: 'Sessions',
+            data: daily.map(d => d.sessions),
+            borderColor: '#0f766e',
+            backgroundColor: 'rgba(15,118,110,0.08)',
+            fill: true,
+            tension: 0.3,
+            pointRadius: 3,
+            pointBackgroundColor: '#0f766e',
+            borderWidth: 2,
+          },
+          {
+            label: 'Active Users',
+            data: daily.map(d => d.activeUsers),
+            borderColor: '#ea580c',
+            backgroundColor: 'rgba(234,88,12,0.06)',
+            fill: true,
+            tension: 0.3,
+            pointRadius: 3,
+            pointBackgroundColor: '#ea580c',
+            borderWidth: 2,
+          },
+        ],
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { labels: { color: '#64748b', boxWidth: 12 } },
+          tooltip: {
+            backgroundColor: '#1e293b',
+            titleColor: '#f8fafc',
+            bodyColor: '#f8fafc',
+            padding: 10,
+            cornerRadius: 6,
+          },
+        },
+        scales: {
+          x: { ticks: { color: '#64748b', maxTicksLimit: 8 }, grid: { color: 'rgba(0,0,0,.05)' } },
+          y: { ticks: { color: '#64748b' }, grid: { color: 'rgba(0,0,0,.05)' }, beginAtZero: true },
+        },
+        interaction: { mode: 'index', intersect: false },
       },
     });
   }

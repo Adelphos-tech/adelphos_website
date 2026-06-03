@@ -256,7 +256,7 @@ app.get('/admin/api/analytics', requireAdmin, async (req, res) => {
   try {
     const analyticsData = google.analyticsdata({ version: 'v1beta', auth });
 
-    const [overview, topPages, events] = await Promise.all([
+    const [overview, topPages, events, daily, trafficSources, devices, countries, userTypes] = await Promise.all([
       analyticsData.properties.runReport({
         property: `properties/${propertyId}`,
         requestBody: {
@@ -290,6 +290,56 @@ app.get('/admin/api/analytics', requireAdmin, async (req, res) => {
           limit: 20,
         },
       }),
+      analyticsData.properties.runReport({
+        property: `properties/${propertyId}`,
+        requestBody: {
+          dateRanges: [{ startDate, endDate }],
+          dimensions: [{ name: 'date' }],
+          metrics: [{ name: 'sessions' }, { name: 'activeUsers' }],
+          orderBys: [{ dimension: { dimensionName: 'date' } }],
+          limit: 90,
+        },
+      }),
+      analyticsData.properties.runReport({
+        property: `properties/${propertyId}`,
+        requestBody: {
+          dateRanges: [{ startDate, endDate }],
+          dimensions: [{ name: 'sessionDefaultChannelGroup' }],
+          metrics: [{ name: 'sessions' }],
+          orderBys: [{ metric: { metricName: 'sessions' }, desc: true }],
+          limit: 10,
+        },
+      }),
+      analyticsData.properties.runReport({
+        property: `properties/${propertyId}`,
+        requestBody: {
+          dateRanges: [{ startDate, endDate }],
+          dimensions: [{ name: 'deviceCategory' }],
+          metrics: [{ name: 'sessions' }],
+          orderBys: [{ metric: { metricName: 'sessions' }, desc: true }],
+          limit: 10,
+        },
+      }),
+      analyticsData.properties.runReport({
+        property: `properties/${propertyId}`,
+        requestBody: {
+          dateRanges: [{ startDate, endDate }],
+          dimensions: [{ name: 'country' }],
+          metrics: [{ name: 'sessions' }],
+          orderBys: [{ metric: { metricName: 'sessions' }, desc: true }],
+          limit: 10,
+        },
+      }),
+      analyticsData.properties.runReport({
+        property: `properties/${propertyId}`,
+        requestBody: {
+          dateRanges: [{ startDate, endDate }],
+          dimensions: [{ name: 'newVsReturning' }],
+          metrics: [{ name: 'sessions' }],
+          orderBys: [{ metric: { metricName: 'sessions' }, desc: true }],
+          limit: 10,
+        },
+      }),
     ]);
 
     const overviewRow = overview.data.rows?.[0];
@@ -310,6 +360,27 @@ app.get('/admin/api/analytics', requireAdmin, async (req, res) => {
       events: (events.data.rows || []).map(r => ({
         name:  r.dimensionValues[0].value,
         count: parseInt(r.metricValues[0].value, 10),
+      })),
+      daily: (daily.data.rows || []).map(r => ({
+        date:  r.dimensionValues[0].value,
+        sessions:     parseInt(r.metricValues[0].value, 10),
+        activeUsers:  parseInt(r.metricValues[1].value, 10),
+      })),
+      trafficSources: (trafficSources.data.rows || []).map(r => ({
+        source:   r.dimensionValues[0].value,
+        sessions: parseInt(r.metricValues[0].value, 10),
+      })),
+      devices: (devices.data.rows || []).map(r => ({
+        device:   r.dimensionValues[0].value,
+        sessions: parseInt(r.metricValues[0].value, 10),
+      })),
+      countries: (countries.data.rows || []).map(r => ({
+        country:  r.dimensionValues[0].value,
+        sessions: parseInt(r.metricValues[0].value, 10),
+      })),
+      userTypes: (userTypes.data.rows || []).map(r => ({
+        type:     r.dimensionValues[0].value,
+        sessions: parseInt(r.metricValues[0].value, 10),
       })),
     });
   } catch (err) {
