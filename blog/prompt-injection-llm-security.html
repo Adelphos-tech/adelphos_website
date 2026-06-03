@@ -103,7 +103,7 @@
       <h2>Why this is worse than it sounds</h2>
       <p>A chatbot that only talks is low-risk. The danger arrives the moment you give the model <strong>tools</strong> and <strong>private data</strong> — which is exactly the direction every enterprise deployment is heading.</p>
       <ul>
-        <li><strong>Indirect injection:</strong> The malicious text doesn't come from the user. It is hidden in a webpage the agent browses, a PDF it summarizes, or an email in the inbox it manages.</li>
+        <li><strong>Indirect injection:</strong> The malicious text doesn't come from the user. It is hidden in a webpage the <a href="/blog/ai-agents-demo-to-production">agent</a> browses, a PDF it summarizes, or an email in the inbox it manages.</li>
         <li><strong>Data exfiltration:</strong> An injected instruction can convince an agent to encode private data into a URL it fetches, leaking it to the attacker.</li>
         <li><strong>Unauthorized actions:</strong> If the agent can send email, issue refunds, or modify records, injection turns into action.</li>
       </ul>
@@ -122,7 +122,7 @@
       </ul>
 
       <h2>The on-premise advantage</h2>
-      <p>Running models on infrastructure you control gives you something cloud APIs can't: full visibility and enforcement at the network layer. You decide what the model can reach, log every tool call, and enforce egress rules — instead of trusting that a third party's guardrails will hold against the next clever payload.</p>
+      <p>Running models on <a href="/blog/sovereign-ai-vs-cloud">infrastructure you control</a> gives you something cloud APIs can't: full visibility and enforcement at the network layer. You decide what the model can reach, log every tool call, and enforce egress rules — instead of trusting that a third party's guardrails will hold against the next clever payload.</p>
 
       <h2>The takeaway</h2>
       <p>Prompt injection is not an edge case to patch later; it is a fundamental property of how LLMs read context. As models gain tools and autonomy, it becomes the defining security problem of enterprise AI. Treat untrusted input as untrusted, enforce least privilege, and keep a human on irreversible actions. The teams that internalize this now will avoid the breach headlines later.</p>

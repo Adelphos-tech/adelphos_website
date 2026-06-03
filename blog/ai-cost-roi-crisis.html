@@ -53,6 +53,46 @@
   <!-- Google Analytics 4 — replace G-XXXXXXXXXX with your Measurement ID -->
   <script async src="https://www.googletagmanager.com/gtag/js?id=G-XXXXXXXXXX"></script>
   <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-XXXXXXXXXX');</script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {
+      "@type": "Question",
+      "name": "Why are enterprises spending more on AI than they recover in value?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Enterprises are spending more on AI than they recover because API costs are growing faster than documented savings. Goldman Sachs, Sequoia Capital, and MIT economists all confirm this gap. The $1 trillion invested in AI infrastructure is outpacing the measurable revenue it generates, especially for enterprises consuming AI as a service rather than owning their infrastructure."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "How much revenue is needed to justify current AI infrastructure spending?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "According to Sequoia Capital's analysis, approximately $600 billion per year in AI-generated end-user revenue is needed to justify the current level of infrastructure investment. At the time of the analysis, the actual revenue figure was a fraction of that number, indicating a structural gap in the economics."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "What is the break-even point for owning AI infrastructure vs. using APIs?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "For most mid-to-large enterprises running consistent inference workloads, the break-even between API cost and owned infrastructure is reached within 12 to 24 months. For teams consuming more than 50 million tokens per month, the payback period on hardware versus equivalent API spend is typically under eighteen months."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Do I need an internal AI team to deploy on-premise LLMs?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "No. A mid-size enterprise with one internal technical hire (or an infrastructure partner like Adelphos) can have a private inference cluster running a fine-tuned model in production within six to eight weeks. Specialist AI infrastructure partners can deploy your first private model, document the stack, train your team, and hand over a system you own."
+      }
+    }
+  ]
+}
+</script>
 </head>
 <body class="article-page__body">
 
@@ -123,7 +163,7 @@
       <h2>Why own infrastructure becomes the only rational answer</h2>
       <p>The cost spiral has a predictable exit point: the companies that will survive it are the ones that stop renting compute and start owning it.</p>
       <p>Every dollar spent on API tokens is a dollar that funds the infrastructure of your vendor — infrastructure that will be used to compete with you, or to raise prices once switching costs are high enough. The token price you pay today is subsidised. NVIDIA, Anthropic, and OpenAI are not running charitable operations; they are building the dependency first and monetising it second.</p>
-      <p>On-premise or private-cloud LLM infrastructure breaks this dynamic. The capital expenditure is front-loaded and visible. The marginal cost of each inference drops toward zero. There is no vendor repricing risk, no data leaving your perimeter, and no structural dependency on a supplier that is simultaneously your competitor.</p>
+      <p><a href="/blog/on-prem-llm-vs-openai-cost">On-premise or private-cloud LLM infrastructure</a> breaks this dynamic. The capital expenditure is front-loaded and visible. The marginal cost of each inference drops toward zero. There is no vendor repricing risk, no data leaving your perimeter, and no structural dependency on a supplier that is simultaneously your competitor.</p>
       <p>This is not an option available to every company today — the upfront investment is real, and the operational expertise required is non-trivial. But the trajectory is clear. As open-weight models continue to close the gap with frontier closed models, and as inference hardware becomes more accessible, building your own stack will shift from an enterprise luxury to a competitive necessity.</p>
 
       <h2>The timeline that matters</h2>
@@ -143,7 +183,7 @@
       <p>The shift from API consumer to infrastructure owner does not require a hyperscaler budget. The path is incremental, and most enterprises can begin within a single quarter. Here is a practical starting sequence:</p>
       <ul>
         <li><strong>Step 1 — Map your highest-volume use cases.</strong> Identify the two or three workflows generating the most token spend today. These are your best candidates for migration to owned infrastructure first, because the savings are immediate and measurable. Common examples: internal document Q&amp;A, customer support triage, contract review, and report summarisation.</li>
-        <li><strong>Step 2 — Select an open-weight model matched to the task.</strong> You do not need GPT-4 class capability for most enterprise tasks. Llama 3.1 (8B or 70B), Mistral, or Qwen models handle the majority of structured text tasks reliably. Match model size to your quality bar — smaller models are faster, cheaper to run, and easier to fine-tune.</li>
+        <li><strong>Step 2 — Select an open-weight model matched to the task.</strong> You do not need GPT-4 class capability for most enterprise tasks. Llama 3.1 (8B or 70B), Mistral, or Qwen models handle the majority of structured text tasks reliably. Match model size to your quality bar — <a href="/blog/small-language-models-enterprise">smaller models</a> are faster, cheaper to run, and easier to fine-tune.</li>
         <li><strong>Step 3 — Choose your deployment layer.</strong> For teams starting out, a single GPU server (NVIDIA A100 or H100) or a managed private-cloud instance (AWS Bedrock custom models, Azure AI Studio with private endpoints, or bare-metal providers like CoreWeave and Lambda Labs) is sufficient for moderate workloads. You do not need a data centre on day one.</li>
         <li><strong>Step 4 — Fine-tune on your own data.</strong> This is where owned infrastructure pays its largest dividend. A fine-tuned 7B model on your company's documents, tone, and domain vocabulary will consistently outperform a generic GPT-4 call for your specific task — at 1–2% of the per-token cost. Tools like Axolotl, Unsloth, and LlamaFactory make fine-tuning accessible without a dedicated ML team.</li>
         <li><strong>Step 5 — Set up a private inference endpoint.</strong> Deploy using vLLM, Ollama, or TGI (Text Generation Inference by Hugging Face). These serve your model via a standard OpenAI-compatible API — meaning your existing integrations require zero code changes. Your applications keep calling the same endpoint format; the traffic simply routes to your server instead of OpenAI's.</li>
@@ -160,7 +200,7 @@
 
       <div style="margin-top:2.5rem;padding:2rem;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.1);border-radius:16px;">
         <p style="margin:0 0 .75rem;font-size:.85rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--accent-l);">Ready to stop renting compute?</p>
-        <p style="margin:0 0 1.25rem;color:var(--w70);">Adelphos designs and deploys private AI infrastructure for enterprises — from your first fine-tuned model to a full sovereign stack. We handle the architecture, deployment, and handover so your team owns the outcome.</p>
+        <p style="margin:0 0 1.25rem;color:var(--w70);">Adelphos designs and deploys private AI infrastructure for enterprises — from your first fine-tuned model to a full <a href="/blog/sovereign-ai-vs-cloud">sovereign stack</a>. We handle the architecture, deployment, and handover so your team owns the outcome.</p>
         <a href="https://wa.me/918866999550" target="_blank" rel="noopener" style="display:inline-block;padding:.65rem 1.4rem;background:var(--accent-l);color:#000;font-weight:700;font-size:.9rem;border-radius:8px;text-decoration:none;">Talk to us about your stack &rarr;</a>
       </div>
 

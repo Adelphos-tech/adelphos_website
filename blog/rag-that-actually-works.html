@@ -53,6 +53,46 @@
   <!-- Google Analytics 4 — replace G-XXXXXXXXXX with your Measurement ID -->
   <script async src="https://www.googletagmanager.com/gtag/js?id=G-XXXXXXXXXX"></script>
   <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-XXXXXXXXXX');</script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {
+      "@type": "Question",
+      "name": "Why do most enterprise RAG pipelines fail in production?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Naive RAG fails because fixed-size chunking cuts meaning in half, semantic search misses exact terms like part numbers and statute references, top-k retrieval is a blunt instrument that may miss the right answer, and most pipelines have no grounding check to verify that generated answers are actually supported by retrieved text."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "What is hybrid search and why does it matter for RAG?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Hybrid search combines dense vector search with keyword or BM25 search. The vector side catches paraphrase and concept; the keyword side catches exact SKUs, section numbers, and acronyms. Fusing both results dramatically improves retrieval accuracy over pure vector similarity alone."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "How do you stop a RAG system from hallucinating?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "The most effective steps are: use a cross-encoder re-ranker to score candidate chunks before generation, require the model to cite chunk IDs, and programmatically verify that claims trace back to retrieved text. If support is missing, the system should return 'I don't have that information' instead of guessing."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Should RAG be deployed on cloud or on-premise infrastructure?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "RAG means your most valuable documents are being embedded and queried constantly. Running the embedding model and vector store on infrastructure you control keeps that corpus inside your perimeter, which is exactly where regulated data needs to stay. On-premise deployment also gives you full visibility into retrieval performance and complete control over data access."
+      }
+    }
+  ]
+}
+</script>
 </head>
 <body class="article-page__body">
 
@@ -95,7 +135,7 @@
     <img src="/blog/images/rag-that-actually-works.jpg" alt="Floor-to-ceiling library shelves filled with books, representing a knowledge base" style="width:100%;height:auto;aspect-ratio:2/1;object-fit:cover;border-radius:16px;border:1px solid rgba(255,255,255,.1);margin-bottom:3rem;display:block;" />
 
     <article class="article-body">
-      <p>Retrieval-augmented generation is the most common way enterprises put their own knowledge behind an LLM. It is also the most commonly broken. A demo that answers three curated questions perfectly can collapse in production — confidently citing the wrong policy, blending two contracts, or inventing a clause that doesn't exist. The model isn't lying; the retrieval layer is feeding it garbage.</p>
+      <p>Retrieval-augmented generation is the most common way enterprises put their own knowledge behind an LLM. It is also the most commonly broken. A demo that answers three curated questions perfectly can <a href="/blog/ai-agents-demo-to-production">collapse in production</a> — confidently citing the wrong policy, blending two contracts, or inventing a clause that doesn't exist. The model isn't lying; the retrieval layer is feeding it garbage.</p>
 
       <h2>Why naive RAG fails</h2>
       <p>The default tutorial pipeline — dump documents, split into fixed-size chunks, embed, fetch top-k by cosine similarity — works just well enough to demo and just badly enough to erode trust. The failure modes are predictable:</p>

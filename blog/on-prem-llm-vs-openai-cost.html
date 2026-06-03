@@ -53,6 +53,46 @@
   <!-- Google Analytics 4 — replace G-XXXXXXXXXX with your Measurement ID -->
   <script async src="https://www.googletagmanager.com/gtag/js?id=G-XXXXXXXXXX"></script>
   <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-XXXXXXXXXX');</script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {
+      "@type": "Question",
+      "name": "Is running an on-premise LLM cheaper than the OpenAI API?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "For most enterprises with consistent inference workloads, on-premise typically breaks even between month 12 and month 18. After the crossover, every additional inference is effectively free relative to the cloud alternative. Over a 36-month horizon, savings frequently exceed $200,000 before accounting for strategic benefits like data residency and price stability."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "What hardware is needed to run an open-weight LLM on-premise?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "A capable inference server with one or two modern GPUs runs $12,000 to $30,000 depending on model size and throughput needs. For teams starting out, a single GPU server (NVIDIA A100 or H100) or a managed private-cloud instance is sufficient for moderate workloads. You do not need a data centre on day one."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "When should an enterprise switch from cloud API to on-premise?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "The cloud API is the right call when volume is low or spiky, when you need frontier reasoning you cannot yet replicate locally, or when you are still prototyping. If LLM inference is becoming a core operational layer — powering support, search, and revenue — then paying per token indefinitely becomes a slow tax on your own success, and ownership pays for itself faster than expected."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "What hidden costs does on-premise deployment eliminate?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Beyond the visible token bill, on-premise eliminates data residency risk, vendor repricing risk, shared-tenant latency and availability issues, and the inability to customize models for your vocabulary and workflows. Your hardware cost is fixed; your marginal cost per inference drops close to the price of electricity."
+      }
+    }
+  ]
+}
+</script>
 </head>
 <body class="article-page__body">
 
@@ -116,7 +156,7 @@
       <h2>The costs nobody puts on the invoice</h2>
       <p>Pure dollar-per-token comparisons miss the factors that often matter more than the bill:</p>
       <ul>
-        <li><strong>Data residency:</strong> With on-prem, sensitive data never leaves your network. For healthcare, finance, and legal, that is the difference between compliant and not.</li>
+        <li><strong><a href="/blog/sovereign-ai-vs-cloud">Data residency</a>:</strong> With on-prem, sensitive data never leaves your network. For healthcare, finance, and legal, that is the difference between compliant and not.</li>
         <li><strong>Price stability:</strong> Cloud pricing and model behavior can change with a blog post. Your hardware doesn't.</li>
         <li><strong>Latency &amp; availability:</strong> No rate limits, no shared-tenant slowdowns, no outages outside your control.</li>
         <li><strong>Customization:</strong> Fine-tuning and quantization on your own stack, optimized for your vocabulary and workflows.</li>
@@ -126,7 +166,7 @@
       <p>This is not a one-sided argument. The OpenAI API is the right call when your volume is low or spiky, when you need frontier reasoning you can't yet replicate locally, or when you're still prototyping and shouldn't sink capital into hardware. Renting makes sense until usage becomes predictable and material.</p>
 
       <h2>The honest conclusion</h2>
-      <p>If LLM inference is a side experiment, rent it. If it is becoming a core operational layer — powering support, search, and revenue — then paying per token indefinitely is a slow tax on your own success. The breakeven math is rarely as far away as the cloud bill makes it feel.</p>
+      <p>If LLM inference is a side experiment, rent it. If it is becoming a core operational layer — powering support, search, and revenue — then paying per token indefinitely is <a href="/blog/ai-cost-roi-crisis">a slow tax on your own success</a>. The breakeven math is rarely as far away as the cloud bill makes it feel.</p>
       <p>We build these models for clients on both sides of the line. Sometimes the spreadsheet says cloud. More often, ownership pays for itself faster than anyone expects — and keeps paying for years.</p>
 
       <div style="margin-top:3rem;padding:2rem;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.08);border-radius:16px;text-align:center;">
