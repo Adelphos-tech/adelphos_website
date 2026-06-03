@@ -170,17 +170,13 @@ app.get('/admin/api/search-console/callback', requireAdmin, async (req, res) => 
 
 // ── Admin API: Search Console ───────────────────────────────────────────────
 app.get('/admin/api/search-console', requireAdmin, async (req, res) => {
-  // Try OAuth tokens first
-  let auth = null;
+  // Use OAuth tokens if available
   const tokens = loadScTokens();
+  let auth = null;
   if (tokens) {
     const client = getScOAuthClient();
     client.setCredentials(tokens);
     auth = client;
-  }
-  // Fall back to service account
-  if (!auth) {
-    auth = getGoogleAuth();
   }
   if (!auth) {
     const client = getScOAuthClient();
