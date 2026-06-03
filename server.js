@@ -119,7 +119,7 @@ function getGoogleAuth() {
 }
 
 // ── Search Console OAuth helpers ────────────────────────────────────────────
-const CLIENT_SECRET_PATH = path.join(__dirname, 'client_secret_939403255437-sqr1j7eqimu2j71d0gk7rh8psngbqd3e.apps.googleusercontent.com.json');
+const CLIENT_SECRET_PATH = path.join(__dirname, 'client_secret_939403255437-hm657psouddtdripir3f6lt8l51s0aqh.apps.googleusercontent.com.json');
 const SC_TOKEN_FILE      = path.join(__dirname, 'data', 'search-console-token.json');
 
 function getScOAuthClient() {
