@@ -38,6 +38,14 @@ app.get('/blog', (req, res) => {
   res.sendFile(path.join(__dirname, 'blog.html'));
 });
 
+app.get('/about', (req, res) => {
+  res.sendFile(path.join(__dirname, 'about.html'));
+});
+
+app.get('/contact', (req, res) => {
+  res.sendFile(path.join(__dirname, 'contact.html'));
+});
+
 // ── Lead submission endpoint ─────────────────────────────────────────────────
 app.post('/submit-lead', async (req, res) => {
   const {
@@ -158,6 +166,11 @@ app.post('/submit-lead', async (req, res) => {
     console.error('[ERROR] Failed to send email:', err.message);
     res.status(500).json({ success: false, error: 'Failed to send email. Check SMTP config.' });
   }
+});
+
+// ── 404 handler ──────────────────────────────────────────────────────────────
+app.use((req, res) => {
+  res.status(404).sendFile(path.join(__dirname, '404.html'));
 });
 
 // ── Start server ─────────────────────────────────────────────────────────────

@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Page Not Found — Adelphos</title>
+  <meta name="robots" content="noindex" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="preload" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'" />
+  <noscript><link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" /></noscript>
+  <link rel="stylesheet" href="/style.css?v=19" />
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-KSMQ94C57F"></script>
+  <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-KSMQ94C57F');</script>
+  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+  <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
+  <link rel="shortcut icon" href="/favicon.ico" />
+  <style>
+    .notfound-page { min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 2rem; background: var(--dark, #07070d); }
+    .notfound-code { font-size: clamp(6rem, 20vw, 12rem); font-weight: 800; line-height: 1; background: linear-gradient(135deg, #16a34a, #4ade80); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 0; }
+    .notfound-title { font-size: clamp(1.4rem, 4vw, 2.2rem); font-weight: 700; color: #fff; margin: 0.5rem 0 1rem; }
+    .notfound-body { font-size: 1rem; color: rgba(255,255,255,.55); max-width: 480px; line-height: 1.7; margin-bottom: 2.5rem; }
+    .notfound-links { display: flex; gap: 1rem; flex-wrap: wrap; justify-content: center; }
+    .notfound-link-secondary { display: inline-flex; align-items: center; gap: .4rem; padding: .75rem 1.5rem; border: 1px solid rgba(255,255,255,.15); border-radius: 50px; color: rgba(255,255,255,.7); text-decoration: none; font-size: .88rem; font-weight: 500; transition: border-color .2s, color .2s; }
+    .notfound-link-secondary:hover { border-color: #4ade80; color: #4ade80; }
+  </style>
+</head>
+<body>
+  <a class="skip-link" href="#main-content">Skip to main content</a>
+
+  <nav id="nav-bar" class="nav-bar nav-bar--solid">
+    <a href="/" class="nav-logo"><img src="/logo.png" alt="Adelphos" class="nav-logo__img" width="131" height="52" /></a>
+    <div class="nav-links">
+      <a href="/">Home</a>
+      <a href="/#services">Capabilities</a>
+      <a href="/blog">Blog</a>
+      <a href="/about">About</a>
+      <a href="/contact">Contact</a>
+    </div>
+    <a href="https://wa.me/918866999550" target="_blank" rel="noopener" class="nav-cta">Book a Call</a>
+    <button id="nav-toggle" class="nav-toggle" aria-label="Toggle Menu">
+      <span></span><span></span><span></span>
+    </button>
+  </nav>
+
+  <main id="main-content" class="notfound-page">
+    <div class="notfound-code">404</div>
+    <h1 class="notfound-title">This page doesn't exist.</h1>
+    <p class="notfound-body">The URL you followed may be broken, or the page may have been moved. Use the links below to get back on track.</p>
+    <div class="notfound-links">
+      <a href="/" class="cta-button">
+        Back to homepage <span class="cta-arrow">→</span>
+      </a>
+      <a href="/blog" class="notfound-link-secondary">Read the blog</a>
+      <a href="/contact" class="notfound-link-secondary">Contact us</a>
+    </div>
+  </main>
+
+  <footer class="site-footer">
+    <div class="site-footer__inner">
+      <a href="/" class="nav-logo"><img src="/logo.png" alt="Adelphos" class="nav-logo__img" width="131" height="52" /></a>
+      <div class="site-footer__contact">
+        <a href="mailto:info@adelphostech.com" class="site-footer__link">info@adelphostech.com</a>
+        <span class="site-footer__dot">&middot;</span>
+        <a href="tel:+918866999550" class="site-footer__link">+91 88669 99550</a>
+      </div>
+      <p class="site-footer__copy">&copy; 2026 Adelphos. All rights reserved.</p>
+    </div>
+  </footer>
+
+  <script>
+    const toggle = document.getElementById('nav-toggle');
+    const nav = document.getElementById('nav-bar');
+    if (toggle) toggle.addEventListener('click', () => nav.classList.toggle('nav-bar--open'));
+  </script>
+</body>
+</html>
