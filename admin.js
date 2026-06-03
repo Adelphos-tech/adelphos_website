@@ -6,7 +6,7 @@
   let leadsSort = { col: 'receivedAt', asc: false };
 
   // ── DOM refs ─────────────────────────────────────────────────────────────
-  const dateTabs = document.querySelectorAll('.admin-tab');
+  const dateTabs = document.querySelectorAll('.date-btn');
   const btnRefresh = document.getElementById('btn-refresh');
   const leadsSearch = document.getElementById('leads-search');
 
@@ -42,7 +42,7 @@
     btnRefresh.textContent = 'Loading...';
     await Promise.all([loadLeads(), loadSearchConsole(), loadAnalytics()]);
     btnRefresh.disabled = false;
-    btnRefresh.textContent = '↻ Refresh';
+    btnRefresh.textContent = '↻';
   }
 
   // ── Leads ────────────────────────────────────────────────────────────────
@@ -54,7 +54,7 @@
       filterAndRenderLeads();
       updateLeadCount();
     } catch (err) {
-      document.getElementById('leads-body').innerHTML = `<tr><td colspan="6" class="admin-loading">${err.message}</td></tr>`;
+      document.getElementById('leads-body').innerHTML = `<tr><td colspan="6" class="loading-cell">${err.message}</td></tr>`;
     }
   }
 
@@ -89,7 +89,7 @@
 
     const tbody = document.getElementById('leads-body');
     if (!rows.length) {
-      tbody.innerHTML = '<tr><td colspan="6" class="admin-loading">No leads found.</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="6" class="loading-cell">No leads found.</td></tr>';
       return;
     }
     tbody.innerHTML = rows.map(l => `
@@ -121,7 +121,7 @@
   async function loadSearchConsole() {
     const notice = document.getElementById('sc-notice');
     const qBody = document.getElementById('sc-queries-body');
-    qBody.innerHTML = '<tr><td colspan="5" class="admin-loading">Loading Search Console data...</td></tr>';
+    qBody.innerHTML = '<tr><td colspan="5" class="loading-cell">Loading Search Console data...</td></tr>';
 
     try {
       const res = await fetch(`/admin/api/search-console?days=${currentDays}`);
@@ -133,7 +133,7 @@
           notice.textContent = j.error || 'Google credentials not configured.';
         }
         notice.classList.remove('hidden');
-        qBody.innerHTML = '<tr><td colspan="5" class="admin-loading">Not configured.</td></tr>';
+        qBody.innerHTML = '<tr><td colspan="5" class="loading-cell">Not configured.</td></tr>';
         clearScCards();
         return;
       }
@@ -148,7 +148,7 @@
 
       // Queries table
       if (!data.queries?.length) {
-        qBody.innerHTML = '<tr><td colspan="5" class="admin-loading">No data for this period.</td></tr>';
+        qBody.innerHTML = '<tr><td colspan="5" class="loading-cell">No data for this period.</td></tr>';
       } else {
         qBody.innerHTML = data.queries.map(q => `
           <tr>
@@ -166,7 +166,7 @@
     } catch (err) {
       notice.textContent = 'Error loading Search Console: ' + err.message;
       notice.classList.remove('hidden');
-      qBody.innerHTML = '<tr><td colspan="5" class="admin-loading">Failed to load.</td></tr>';
+      qBody.innerHTML = '<tr><td colspan="5" class="loading-cell">Failed to load.</td></tr>';
       clearScCards();
     }
   }
@@ -197,10 +197,10 @@
       options: {
         responsive: true,
         maintainAspectRatio: false,
-        plugins: { legend: { labels: { color: '#9ca3af' } } },
+        plugins: { legend: { labels: { color: '#64748b' } } },
         scales: {
-          x: { ticks: { color: '#9ca3af' }, grid: { color: 'rgba(255,255,255,.05)' } },
-          y: { ticks: { color: '#9ca3af' }, grid: { color: 'rgba(255,255,255,.05)' }, beginAtZero: true },
+          x: { ticks: { color: '#64748b' }, grid: { color: 'rgba(0,0,0,.05)' } },
+          y: { ticks: { color: '#64748b' }, grid: { color: 'rgba(0,0,0,.05)' }, beginAtZero: true },
         },
       },
     });
@@ -211,8 +211,8 @@
     const notice = document.getElementById('ga4-notice');
     const pBody = document.getElementById('ga4-pages-body');
     const eBody = document.getElementById('ga4-events-body');
-    pBody.innerHTML = '<tr><td colspan="3" class="admin-loading">Loading GA4 data...</td></tr>';
-    eBody.innerHTML = '<tr><td colspan="2" class="admin-loading">Loading GA4 data...</td></tr>';
+    pBody.innerHTML = '<tr><td colspan="3" class="loading-cell">Loading GA4 data...</td></tr>';
+    eBody.innerHTML = '<tr><td colspan="2" class="loading-cell">Loading GA4 data...</td></tr>';
 
     try {
       const res = await fetch(`/admin/api/analytics?days=${currentDays}`);
@@ -220,8 +220,8 @@
         const j = await res.json();
         notice.textContent = j.error || 'Google credentials not configured.';
         notice.classList.remove('hidden');
-        pBody.innerHTML = '<tr><td colspan="3" class="admin-loading">Not configured.</td></tr>';
-        eBody.innerHTML = '<tr><td colspan="2" class="admin-loading">Not configured.</td></tr>';
+        pBody.innerHTML = '<tr><td colspan="3" class="loading-cell">Not configured.</td></tr>';
+        eBody.innerHTML = '<tr><td colspan="2" class="loading-cell">Not configured.</td></tr>';
         clearGa4Cards();
         return;
       }
@@ -235,7 +235,7 @@
 
       // Pages table
       if (!data.topPages?.length) {
-        pBody.innerHTML = '<tr><td colspan="3" class="admin-loading">No data for this period.</td></tr>';
+        pBody.innerHTML = '<tr><td colspan="3" class="loading-cell">No data for this period.</td></tr>';
       } else {
         pBody.innerHTML = data.topPages.map(p => `
           <tr>
@@ -248,7 +248,7 @@
 
       // Events table
       if (!data.events?.length) {
-        eBody.innerHTML = '<tr><td colspan="2" class="admin-loading">No events for this period.</td></tr>';
+        eBody.innerHTML = '<tr><td colspan="2" class="loading-cell">No events for this period.</td></tr>';
       } else {
         eBody.innerHTML = data.events.map(e => `
           <tr>
@@ -263,8 +263,8 @@
     } catch (err) {
       notice.textContent = 'Error loading GA4: ' + err.message;
       notice.classList.remove('hidden');
-      pBody.innerHTML = '<tr><td colspan="3" class="admin-loading">Failed to load.</td></tr>';
-      eBody.innerHTML = '<tr><td colspan="2" class="admin-loading">Failed to load.</td></tr>';
+      pBody.innerHTML = '<tr><td colspan="3" class="loading-cell">Failed to load.</td></tr>';
+      eBody.innerHTML = '<tr><td colspan="2" class="loading-cell">Failed to load.</td></tr>';
       clearGa4Cards();
     }
   }
@@ -292,7 +292,7 @@
             '#4ade80', '#22c55e', '#16a34a', '#15803d',
             '#86efac', '#bbf7d0', '#dcfce7', '#f0fdf4',
           ],
-          borderColor: '#111827',
+          borderColor: '#ffffff',
           borderWidth: 2,
         }],
       },
@@ -300,7 +300,7 @@
         responsive: true,
         maintainAspectRatio: false,
         plugins: {
-          legend: { position: 'right', labels: { color: '#9ca3af', boxWidth: 12 } },
+          legend: { position: 'right', labels: { color: '#64748b', boxWidth: 12 } },
         },
       },
     });
