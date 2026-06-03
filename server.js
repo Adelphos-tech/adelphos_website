@@ -3,20 +3,32 @@
 require('dotenv').config();
 
 const express    = require('express');
+const session    = require('express-session');
 const nodemailer = require('nodemailer');
 const path       = require('path');
+const fs         = require('fs');
+const { google } = require('googleapis');
 
 const app = express();
 app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+
+// ── Session middleware ───────────────────────────────────────────────────────
+app.use(session({
+  secret: process.env.SESSION_SECRET || 'default-secret-change-me',
+  resave: false,
+  saveUninitialized: false,
+  cookie: {
+    maxAge: 24 * 60 * 60 * 1000, // 1 day
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+  },
+}));
 
 // Redirect index.html to / for clean URLs
 app.get('/index.html', (req, res) => {
   res.redirect(301, '/');
 });
-
-// ── Serve the static website from this same folder ─────────────────────────
-// `extensions: ['html']` lets clean URLs like /blog/<slug> resolve to <slug>.html
-app.use(express.static(path.join(__dirname), { extensions: ['html'] }));
 
 // ── SMTP Transporter ────────────────────────────────────────────────────────
 const transporter = nodemailer.createTransport({
@@ -27,6 +39,218 @@ const transporter = nodemailer.createTransport({
     user: process.env.SMTP_USER,
     pass: process.env.SMTP_PASS,
   },
+});
+
+// ── Lead persistence ────────────────────────────────────────────────────────
+const LEADS_FILE = path.join(__dirname, 'data', 'leads.json');
+const MAX_LEADS  = 500;
+
+function ensureDataDir() {
+  const dir = path.dirname(LEADS_FILE);
+  if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+}
+
+function loadLeads() {
+  ensureDataDir();
+  if (!fs.existsSync(LEADS_FILE)) return [];
+  try {
+    return JSON.parse(fs.readFileSync(LEADS_FILE, 'utf8'));
+  } catch { return []; }
+}
+
+function saveLead(lead) {
+  ensureDataDir();
+  const leads = loadLeads();
+  leads.unshift({ ...lead, receivedAt: new Date().toISOString() });
+  if (leads.length > MAX_LEADS) leads.length = MAX_LEADS;
+  fs.writeFileSync(LEADS_FILE, JSON.stringify(leads, null, 2));
+}
+
+// ── Auth helpers ────────────────────────────────────────────────────────────
+function requireAdmin(req, res, next) {
+  if (req.session && req.session.isAdmin) return next();
+  if (req.path.startsWith('/admin/api')) return res.status(401).json({ error: 'Unauthorized' });
+  return res.redirect('/admin/login');
+}
+
+// ── Admin auth routes ─────────────────────────────────────────────────────────
+app.get('/admin/login', (req, res) => {
+  if (req.session.isAdmin) return res.redirect('/admin');
+  res.sendFile(path.join(__dirname, 'admin-login.html'));
+});
+
+app.post('/admin/login', (req, res) => {
+  const { password } = req.body;
+  if (password && password === process.env.ADMIN_PASSWORD) {
+    req.session.isAdmin = true;
+    return res.json({ success: true });
+  }
+  res.status(401).json({ success: false, error: 'Invalid password.' });
+});
+
+app.get('/admin/logout', (req, res) => {
+  req.session.destroy(() => res.redirect('/admin/login'));
+});
+
+// ── Admin dashboard ───────────────────────────────────────────────────────────
+app.get('/admin', requireAdmin, (req, res) => {
+  res.sendFile(path.join(__dirname, 'admin.html'));
+});
+
+// ── Admin API: leads ──────────────────────────────────────────────────────────
+app.get('/admin/api/leads', requireAdmin, (req, res) => {
+  res.json(loadLeads());
+});
+
+// ── Google API helpers ──────────────────────────────────────────────────────
+let googleAuth = null;
+function getGoogleAuth() {
+  if (googleAuth) return googleAuth;
+  const keyPath = process.env.GOOGLE_SERVICE_ACCOUNT_KEY;
+  if (!keyPath || !fs.existsSync(keyPath)) return null;
+  googleAuth = new google.auth.GoogleAuth({
+    keyFile: keyPath,
+    scopes: [
+      'https://www.googleapis.com/auth/webmasters.readonly',
+      'https://www.googleapis.com/auth/analytics.readonly',
+    ],
+  });
+  return googleAuth;
+}
+
+// ── Admin API: Search Console ───────────────────────────────────────────────
+app.get('/admin/api/search-console', requireAdmin, async (req, res) => {
+  const auth = getGoogleAuth();
+  if (!auth) return res.status(503).json({ error: 'Google credentials not configured. See GOOGLE_API_SETUP.md' });
+
+  const days = Math.min(parseInt(req.query.days || '28', 10), 90);
+  const startDate = new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+  const endDate   = new Date().toISOString().split('T')[0];
+
+  try {
+    const webmasters = google.webmasters({ version: 'v3', auth });
+    const siteUrl = process.env.SEARCH_CONSOLE_SITE || 'https://adelphostech.com/';
+
+    const [queriesData, pagesData] = await Promise.all([
+      webmasters.searchanalytics.query({
+        siteUrl,
+        requestBody: { startDate, endDate, dimensions: ['query'], rowLimit: 100 },
+      }),
+      webmasters.searchanalytics.query({
+        siteUrl,
+        requestBody: { startDate, endDate, dimensions: ['page'], rowLimit: 100 },
+      }),
+    ]);
+
+    const summary = {
+      clicks:      (queriesData.data.rows || []).reduce((s, r) => s + (r.clicks || 0), 0),
+      impressions: (queriesData.data.rows || []).reduce((s, r) => s + (r.impressions || 0), 0),
+      ctr:         queriesData.data.rows?.length
+        ? (queriesData.data.rows.reduce((s, r) => s + (r.ctr || 0), 0) / queriesData.data.rows.length * 100).toFixed(2)
+        : '0.00',
+      position:    queriesData.data.rows?.length
+        ? (queriesData.data.rows.reduce((s, r) => s + (r.position || 0), 0) / queriesData.data.rows.length).toFixed(1)
+        : '0.0',
+    };
+
+    res.json({
+      summary,
+      queries: (queriesData.data.rows || []).map(r => ({
+        query:      r.keys[0],
+        clicks:     r.clicks || 0,
+        impressions: r.impressions || 0,
+        ctr:        ((r.ctr || 0) * 100).toFixed(2),
+        position:   (r.position || 0).toFixed(1),
+      })),
+      pages: (pagesData.data.rows || []).map(r => ({
+        page:       r.keys[0],
+        clicks:     r.clicks || 0,
+        impressions: r.impressions || 0,
+        ctr:        ((r.ctr || 0) * 100).toFixed(2),
+        position:   (r.position || 0).toFixed(1),
+      })),
+    });
+  } catch (err) {
+    console.error('[ERROR] Search Console API:', err.message);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ── Admin API: GA4 ────────────────────────────────────────────────────────────
+app.get('/admin/api/analytics', requireAdmin, async (req, res) => {
+  const auth = getGoogleAuth();
+  if (!auth) return res.status(503).json({ error: 'Google credentials not configured. See GOOGLE_API_SETUP.md' });
+
+  const propertyId = process.env.GA4_PROPERTY_ID;
+  if (!propertyId) return res.status(503).json({ error: 'GA4_PROPERTY_ID not set in .env' });
+
+  const days = Math.min(parseInt(req.query.days || '28', 10), 90);
+  const startDate = new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+  const endDate   = new Date().toISOString().split('T')[0];
+
+  try {
+    const analyticsData = google.analyticsdata({ version: 'v1beta', auth });
+
+    const [overview, topPages, events] = await Promise.all([
+      analyticsData.properties.runReport({
+        property: `properties/${propertyId}`,
+        requestBody: {
+          dateRanges: [{ startDate, endDate }],
+          metrics: [
+            { name: 'sessions' },
+            { name: 'activeUsers' },
+            { name: 'screenPageViews' },
+            { name: 'averageSessionDuration' },
+            { name: 'bounceRate' },
+          ],
+        },
+      }),
+      analyticsData.properties.runReport({
+        property: `properties/${propertyId}`,
+        requestBody: {
+          dateRanges: [{ startDate, endDate }],
+          dimensions: [{ name: 'pageTitle' }, { name: 'pagePath' }],
+          metrics: [{ name: 'screenPageViews' }],
+          orderBys: [{ metric: { metricName: 'screenPageViews' }, desc: true }],
+          limit: 20,
+        },
+      }),
+      analyticsData.properties.runReport({
+        property: `properties/${propertyId}`,
+        requestBody: {
+          dateRanges: [{ startDate, endDate }],
+          dimensions: [{ name: 'eventName' }],
+          metrics: [{ name: 'eventCount' }],
+          orderBys: [{ metric: { metricName: 'eventCount' }, desc: true }],
+          limit: 20,
+        },
+      }),
+    ]);
+
+    const overviewRow = overview.data.rows?.[0];
+    const overviewMetrics = {};
+    if (overviewRow) {
+      overview.data.metricHeaders.forEach((h, i) => {
+        overviewMetrics[h.name] = overviewRow.metricValues[i].value;
+      });
+    }
+
+    res.json({
+      overview: overviewMetrics,
+      topPages: (topPages.data.rows || []).map(r => ({
+        title: r.dimensionValues[0].value,
+        path:  r.dimensionValues[1].value,
+        views: parseInt(r.metricValues[0].value, 10),
+      })),
+      events: (events.data.rows || []).map(r => ({
+        name:  r.dimensionValues[0].value,
+        count: parseInt(r.metricValues[0].value, 10),
+      })),
+    });
+  } catch (err) {
+    console.error('[ERROR] GA4 API:', err.message);
+    res.status(500).json({ error: err.message });
+  }
 });
 
 // ── Clean URL routes ────────────────────────────────────────────────────────
@@ -58,6 +282,9 @@ app.post('/submit-lead', async (req, res) => {
   if (!name || !email || !company) {
     return res.status(400).json({ success: false, error: 'Missing required fields.' });
   }
+
+  // Persist lead
+  saveLead({ name, title, email, phone, company, website, size, industry, aiUse, challenge, goal, source: 'website' });
 
   // ── Beautiful HTML email ──────────────────────────────────────────────────
   const html = `
@@ -168,6 +395,14 @@ app.post('/submit-lead', async (req, res) => {
   }
 });
 
+// ── Block direct access to admin HTML files ─────────────────────────────────
+app.get('/admin.html', (req, res) => res.redirect('/admin'));
+app.get('/admin-login.html', (req, res) => res.redirect('/admin/login'));
+
+// ── Serve the static website from this same folder ─────────────────────────
+// Placed AFTER all custom routes so auth routes take priority
+app.use(express.static(path.join(__dirname), { extensions: ['html'] }));
+
 // ── 404 handler ──────────────────────────────────────────────────────────────
 app.use((req, res) => {
   res.status(404).sendFile(path.join(__dirname, '404.html'));
@@ -179,6 +414,7 @@ app.listen(PORT, '0.0.0.0', () => {
   console.log('');
   console.log('  ✦ Adelphos server running');
   console.log(`  ✦ Website:  http://localhost:${PORT}`);
+  console.log(`  ✦ Admin:    http://localhost:${PORT}/admin`);
   console.log(`  ✦ Local IP: http://0.0.0.0:${PORT}`);
   console.log('');
 });

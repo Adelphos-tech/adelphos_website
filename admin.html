@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Adelphos Admin Dashboard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/admin.css" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+</head>
+<body>
+  <nav class="admin-nav">
+    <div class="admin-nav__inner">
+      <a href="/" class="admin-nav__logo"><img src="/logo.png" alt="Adelphos" width="131" height="52" /></a>
+      <div class="admin-nav__title">Admin Dashboard</div>
+      <a href="/admin/logout" class="admin-nav__logout">Logout</a>
+    </div>
+  </nav>
+
+  <main class="admin-main">
+
+    <!-- Controls -->
+    <div class="admin-controls">
+      <div class="admin-date-tabs">
+        <button class="admin-tab active" data-days="7">Last 7 days</button>
+        <button class="admin-tab" data-days="28">Last 28 days</button>
+        <button class="admin-tab" data-days="90">Last 90 days</button>
+      </div>
+      <div class="admin-refresh">
+        <button id="btn-refresh" class="admin-btn-ghost">↻ Refresh</button>
+      </div>
+    </div>
+
+    <!-- Summary cards -->
+    <div class="admin-cards" id="summary-cards">
+      <div class="admin-card">
+        <div class="admin-card__label">New Leads (period)</div>
+        <div class="admin-card__value" id="card-leads">—</div>
+      </div>
+      <div class="admin-card">
+        <div class="admin-card__label">Search Impressions</div>
+        <div class="admin-card__value" id="card-impressions">—</div>
+      </div>
+      <div class="admin-card">
+        <div class="admin-card__label">Search Clicks</div>
+        <div class="admin-card__value" id="card-clicks">—</div>
+      </div>
+      <div class="admin-card">
+        <div class="admin-card__label">Avg Position</div>
+        <div class="admin-card__value" id="card-position">—</div>
+      </div>
+      <div class="admin-card">
+        <div class="admin-card__label">GA4 Sessions</div>
+        <div class="admin-card__value" id="card-sessions">—</div>
+      </div>
+      <div class="admin-card">
+        <div class="admin-card__label">GA4 Active Users</div>
+        <div class="admin-card__value" id="card-users">—</div>
+      </div>
+    </div>
+
+    <!-- Leads Section -->
+    <section class="admin-section">
+      <div class="admin-section__header">
+        <h2 class="admin-section__title">🎯 Recent Leads</h2>
+        <input type="text" id="leads-search" class="admin-search" placeholder="Search leads..." />
+      </div>
+      <div class="admin-table-wrap">
+        <table class="admin-table" id="leads-table">
+          <thead>
+            <tr>
+              <th data-sort="receivedAt">Date ↕</th>
+              <th data-sort="name">Name ↕</th>
+              <th data-sort="company">Company ↕</th>
+              <th data-sort="email">Email ↕</th>
+              <th data-sort="aiUse">Interest ↕</th>
+              <th>Phone</th>
+            </tr>
+          </thead>
+          <tbody id="leads-body">
+            <tr><td colspan="6" class="admin-loading">Loading leads...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- Search Console Section -->
+    <section class="admin-section">
+      <div class="admin-section__header">
+        <h2 class="admin-section__title">🔍 Google Search Console</h2>
+      </div>
+      <div id="sc-notice" class="admin-notice hidden"></div>
+
+      <div class="admin-chart-grid">
+        <div class="admin-chart-card">
+          <h3 class="admin-chart-title">Impressions vs Clicks</h3>
+          <div class="admin-chart-wrap">
+            <canvas id="sc-chart"></canvas>
+          </div>
+        </div>
+      </div>
+
+      <div class="admin-table-wrap">
+        <h3 class="admin-table-title">Top Search Queries</h3>
+        <table class="admin-table" id="sc-queries-table">
+          <thead>
+            <tr><th>Query</th><th>Clicks</th><th>Impressions</th><th>CTR</th><th>Position</th></tr>
+          </thead>
+          <tbody id="sc-queries-body">
+            <tr><td colspan="5" class="admin-loading">Loading Search Console data...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- GA4 Section -->
+    <section class="admin-section">
+      <div class="admin-section__header">
+        <h2 class="admin-section__title">📊 Google Analytics 4</h2>
+      </div>
+      <div id="ga4-notice" class="admin-notice hidden"></div>
+
+      <div class="admin-chart-grid">
+        <div class="admin-chart-card">
+          <h3 class="admin-chart-title">Top Events</h3>
+          <div class="admin-chart-wrap">
+            <canvas id="ga4-events-chart"></canvas>
+          </div>
+        </div>
+      </div>
+
+      <div class="admin-table-wrap">
+        <h3 class="admin-table-title">Top Pages</h3>
+        <table class="admin-table" id="ga4-pages-table">
+          <thead>
+            <tr><th>Page</th><th>Title</th><th>Views</th></tr>
+          </thead>
+          <tbody id="ga4-pages-body">
+            <tr><td colspan="3" class="admin-loading">Loading GA4 data...</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="admin-table-wrap">
+        <h3 class="admin-table-title">Events</h3>
+        <table class="admin-table" id="ga4-events-table">
+          <thead>
+            <tr><th>Event Name</th><th>Count</th></tr>
+          </thead>
+          <tbody id="ga4-events-body">
+            <tr><td colspan="2" class="admin-loading">Loading GA4 data...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+  </main>
+
+  <script src="/admin.js"></script>
+</body>
+</html>

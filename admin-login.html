@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Adelphos Admin — Login</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg: #0b0f19;
+      --card: #111827;
+      --border: rgba(255,255,255,.08);
+      --fg: #e5e7eb;
+      --muted: #9ca3af;
+      --accent: #4ade80;
+      --accent-d: #16a34a;
+      --error: #ef4444;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: var(--bg);
+      color: var(--fg);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem;
+    }
+    .login-card {
+      width: 100%;
+      max-width: 400px;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 2.5rem;
+      box-shadow: 0 20px 60px rgba(0,0,0,.4);
+    }
+    .login-logo {
+      display: flex;
+      align-items: center;
+      gap: .75rem;
+      margin-bottom: 2rem;
+    }
+    .login-logo img { width: 131px; height: 52px; object-fit: contain; }
+    .login-title {
+      font-size: 1.25rem;
+      font-weight: 700;
+      margin-bottom: .25rem;
+    }
+    .login-sub {
+      font-size: .85rem;
+      color: var(--muted);
+      margin-bottom: 1.5rem;
+    }
+    .field { margin-bottom: 1rem; }
+    .field label {
+      display: block;
+      font-size: .78rem;
+      font-weight: 600;
+      color: var(--muted);
+      margin-bottom: .4rem;
+      text-transform: uppercase;
+      letter-spacing: .05em;
+    }
+    .field input {
+      width: 100%;
+      background: rgba(255,255,255,.04);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: .75rem 1rem;
+      color: var(--fg);
+      font-family: inherit;
+      font-size: .9rem;
+      transition: border-color .2s;
+    }
+    .field input:focus {
+      outline: none;
+      border-color: var(--accent);
+    }
+    .login-btn {
+      width: 100%;
+      margin-top: .5rem;
+      padding: .8rem 1rem;
+      border: none;
+      border-radius: 8px;
+      background: linear-gradient(135deg, var(--accent-d), var(--accent));
+      color: #fff;
+      font-family: inherit;
+      font-size: .9rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: opacity .2s, transform .1s;
+    }
+    .login-btn:hover { opacity: .9; }
+    .login-btn:active { transform: scale(.99); }
+    .login-btn:disabled { opacity: .6; cursor: not-allowed; }
+    .error-msg {
+      display: none;
+      margin-top: 1rem;
+      padding: .75rem 1rem;
+      background: rgba(239,68,68,.1);
+      border: 1px solid rgba(239,68,68,.2);
+      border-radius: 8px;
+      color: var(--error);
+      font-size: .85rem;
+    }
+    .back-link {
+      display: block;
+      margin-top: 1.5rem;
+      text-align: center;
+      font-size: .8rem;
+      color: var(--muted);
+      text-decoration: none;
+    }
+    .back-link:hover { color: var(--fg); }
+  </style>
+</head>
+<body>
+  <div class="login-card">
+    <div class="login-logo">
+      <img src="/logo.png" alt="Adelphos" />
+    </div>
+    <h1 class="login-title">Admin Panel</h1>
+    <p class="login-sub">Enter your password to access leads, Search Console, and analytics.</p>
+
+    <form id="login-form">
+      <div class="field">
+        <label for="password">Password</label>
+        <input type="password" id="password" name="password" placeholder="••••••••" required autofocus />
+      </div>
+      <button type="submit" class="login-btn" id="login-btn">Sign In</button>
+      <div class="error-msg" id="error-msg">Invalid password.</div>
+    </form>
+
+    <a href="/" class="back-link">← Back to website</a>
+  </div>
+
+  <script>
+    const form = document.getElementById('login-form');
+    const btn = document.getElementById('login-btn');
+    const error = document.getElementById('error-msg');
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      error.style.display = 'none';
+      btn.disabled = true;
+      btn.textContent = 'Signing in...';
+
+      const password = document.getElementById('password').value;
+      try {
+        const res = await fetch('/admin/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ password })
+        });
+        const json = await res.json();
+        if (json.success) {
+          window.location.href = '/admin';
+        } else {
+          throw new Error(json.error || 'Invalid password');
+        }
+      } catch (err) {
+        error.textContent = err.message;
+        error.style.display = 'block';
+        btn.disabled = false;
+        btn.textContent = 'Sign In';
+      }
+    });
+  </script>
+</body>
+</html>
