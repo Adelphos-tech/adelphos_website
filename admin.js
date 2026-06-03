@@ -127,7 +127,11 @@
       const res = await fetch(`/admin/api/search-console?days=${currentDays}`);
       if (res.status === 503) {
         const j = await res.json();
-        notice.textContent = j.error || 'Google credentials not configured.';
+        if (j.authUrl) {
+          notice.innerHTML = escapeHtml(j.error) + '<br><a href="' + escapeHtml(j.authUrl) + '" target="_blank" class="admin-connect-btn" style="display:inline-block;margin-top:.75rem;padding:.5rem 1rem;background:linear-gradient(135deg,#16a34a,#4ade80);color:#fff;border-radius:6px;text-decoration:none;font-weight:600;font-size:.85rem;">Connect Google Search Console</a>';
+        } else {
+          notice.textContent = j.error || 'Google credentials not configured.';
+        }
         notice.classList.remove('hidden');
         qBody.innerHTML = '<tr><td colspan="5" class="admin-loading">Not configured.</td></tr>';
         clearScCards();

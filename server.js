@@ -118,10 +118,79 @@ function getGoogleAuth() {
   return googleAuth;
 }
 
+// ── Search Console OAuth helpers ────────────────────────────────────────────
+const CLIENT_SECRET_PATH = path.join(__dirname, 'client_secret_939403255437-sqr1j7eqimu2j71d0gk7rh8psngbqd3e.apps.googleusercontent.com.json');
+const SC_TOKEN_FILE      = path.join(__dirname, 'data', 'search-console-token.json');
+
+function getScOAuthClient() {
+  const raw = JSON.parse(fs.readFileSync(CLIENT_SECRET_PATH, 'utf8'));
+  const secrets = raw.installed || raw.web;
+  return new google.auth.OAuth2(
+    secrets.client_id,
+    secrets.client_secret,
+    'https://adelphostech.com/admin/api/search-console/callback'
+  );
+}
+
+function loadScTokens() {
+  if (!fs.existsSync(SC_TOKEN_FILE)) return null;
+  try { return JSON.parse(fs.readFileSync(SC_TOKEN_FILE, 'utf8')); } catch { return null; }
+}
+
+function saveScTokens(tokens) {
+  ensureDataDir();
+  fs.writeFileSync(SC_TOKEN_FILE, JSON.stringify(tokens, null, 2));
+}
+
+// ── Search Console OAuth: initiate ──────────────────────────────────────────
+app.get('/admin/api/search-console/auth', requireAdmin, (req, res) => {
+  const client = getScOAuthClient();
+  const url = client.generateAuthUrl({
+    access_type: 'offline',
+    scope: ['https://www.googleapis.com/auth/webmasters.readonly'],
+    prompt: 'consent',
+  });
+  res.redirect(url);
+});
+
+// ── Search Console OAuth: callback ──────────────────────────────────────────
+app.get('/admin/api/search-console/callback', requireAdmin, async (req, res) => {
+  const code = req.query.code;
+  if (!code) return res.status(400).send('Missing authorization code.');
+  try {
+    const client = getScOAuthClient();
+    const { tokens } = await client.getToken(code);
+    saveScTokens(tokens);
+    res.send('Search Console connected successfully! You can close this tab and refresh the admin dashboard.');
+  } catch (err) {
+    console.error('[ERROR] Search Console OAuth callback:', err.message);
+    res.status(500).send('Failed to connect Search Console: ' + err.message);
+  }
+});
+
 // ── Admin API: Search Console ───────────────────────────────────────────────
 app.get('/admin/api/search-console', requireAdmin, async (req, res) => {
-  const auth = getGoogleAuth();
-  if (!auth) return res.status(503).json({ error: 'Google credentials not configured. See GOOGLE_API_SETUP.md' });
+  // Try OAuth tokens first
+  let auth = null;
+  const tokens = loadScTokens();
+  if (tokens) {
+    const client = getScOAuthClient();
+    client.setCredentials(tokens);
+    auth = client;
+  }
+  // Fall back to service account
+  if (!auth) {
+    auth = getGoogleAuth();
+  }
+  if (!auth) {
+    const client = getScOAuthClient();
+    const authUrl = client.generateAuthUrl({
+      access_type: 'offline',
+      scope: ['https://www.googleapis.com/auth/webmasters.readonly'],
+      prompt: 'consent',
+    });
+    return res.status(503).json({ error: 'Search Console not connected. Click the button below to connect.', authUrl });
+  }
 
   const days = Math.min(parseInt(req.query.days || '28', 10), 90);
   const startDate = new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
