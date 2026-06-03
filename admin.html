@@ -21,10 +21,10 @@
         <span class="sidebar__title">Admin</span>
       </div>
       <nav class="sidebar__nav">
-        <a href="#overview" class="sidebar__link active">Dashboard</a>
-        <a href="#leads" class="sidebar__link">Leads</a>
-        <a href="#search-console" class="sidebar__link">Search Console</a>
-        <a href="#analytics" class="sidebar__link">Analytics</a>
+        <a href="#" class="sidebar__link active" data-section="dashboard">Dashboard</a>
+        <a href="#" class="sidebar__link" data-section="leads">Leads</a>
+        <a href="#" class="sidebar__link" data-section="search-console">Search Console</a>
+        <a href="#" class="sidebar__link" data-section="analytics">Analytics</a>
       </nav>
       <div class="sidebar__footer">
         <a href="/admin/logout" class="sidebar__logout">Logout</a>
@@ -36,7 +36,7 @@
 
       <!-- Top Bar -->
       <header class="topbar">
-        <h1 class="topbar__heading">Dashboard Overview</h1>
+        <h1 class="topbar__heading" id="page-title">Dashboard Overview</h1>
         <div class="topbar__actions">
           <div class="date-picker">
             <button class="date-btn active" data-days="7">7 Days</button>
@@ -47,153 +47,264 @@
         </div>
       </header>
 
-      <!-- Summary Cards -->
-      <section class="cards" id="overview">
-        <div class="stat-card">
-          <div class="stat-card__meta">
-            <span class="stat-card__label">New Leads</span>
-            <span class="stat-card__period">this period</span>
+      <!-- ===== DASHBOARD SECTION ===== -->
+      <section class="section-panel active" id="dashboard">
+        <!-- Summary Cards -->
+        <section class="cards">
+          <div class="stat-card">
+            <div class="stat-card__meta">
+              <span class="stat-card__label">New Leads</span>
+              <span class="stat-card__period">this period</span>
+            </div>
+            <div class="stat-card__value" id="card-leads">—</div>
           </div>
-          <div class="stat-card__value" id="card-leads">—</div>
+          <div class="stat-card stat-card--blue">
+            <div class="stat-card__meta">
+              <span class="stat-card__label">Impressions</span>
+              <span class="stat-card__period">Google Search</span>
+            </div>
+            <div class="stat-card__value" id="card-impressions">—</div>
+          </div>
+          <div class="stat-card stat-card--green">
+            <div class="stat-card__meta">
+              <span class="stat-card__label">Clicks</span>
+              <span class="stat-card__period">Google Search</span>
+            </div>
+            <div class="stat-card__value" id="card-clicks">—</div>
+          </div>
+          <div class="stat-card stat-card--purple">
+            <div class="stat-card__meta">
+              <span class="stat-card__label">Avg Position</span>
+              <span class="stat-card__period">Google Search</span>
+            </div>
+            <div class="stat-card__value" id="card-position">—</div>
+          </div>
+          <div class="stat-card stat-card--orange">
+            <div class="stat-card__meta">
+              <span class="stat-card__label">Sessions</span>
+              <span class="stat-card__period">GA4</span>
+            </div>
+            <div class="stat-card__value" id="card-sessions">—</div>
+          </div>
+          <div class="stat-card stat-card--teal">
+            <div class="stat-card__meta">
+              <span class="stat-card__label">Active Users</span>
+              <span class="stat-card__period">GA4</span>
+            </div>
+            <div class="stat-card__value" id="card-users">—</div>
+          </div>
+        </section>
+
+        <!-- Dashboard Charts Row -->
+        <div class="dashboard-charts">
+          <div class="panel">
+            <div class="panel__header">
+              <div>
+                <h2 class="panel__title">Search Performance</h2>
+                <p class="panel__subtitle">Top queries by impressions and clicks</p>
+              </div>
+            </div>
+            <div class="chart-row">
+              <div class="chart-card">
+                <div class="chart-canvas-wrap">
+                  <canvas id="sc-chart"></canvas>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="panel">
+            <div class="panel__header">
+              <div>
+                <h2 class="panel__title">Top Events</h2>
+                <p class="panel__subtitle">Most frequent events this period</p>
+              </div>
+            </div>
+            <div class="chart-row">
+              <div class="chart-card">
+                <div class="chart-canvas-wrap chart-canvas-wrap--doughnut">
+                  <canvas id="ga4-events-chart"></canvas>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
-        <div class="stat-card stat-card--blue">
-          <div class="stat-card__meta">
-            <span class="stat-card__label">Impressions</span>
-            <span class="stat-card__period">Google Search</span>
+
+        <!-- Quick Tables -->
+        <div class="dashboard-tables">
+          <div class="panel">
+            <div class="panel__header">
+              <div>
+                <h2 class="panel__title">Recent Leads</h2>
+                <p class="panel__subtitle">Latest 5 submissions</p>
+              </div>
+            </div>
+            <div class="table-wrap">
+              <table class="data-table" id="dashboard-leads-table">
+                <thead>
+                  <tr>
+                    <th>Date</th>
+                    <th>Name</th>
+                    <th>Company</th>
+                    <th>Email</th>
+                    <th>Interest</th>
+                  </tr>
+                </thead>
+                <tbody id="dashboard-leads-body">
+                  <tr><td colspan="5" class="loading-cell">Loading...</td></tr>
+                </tbody>
+              </table>
+            </div>
           </div>
-          <div class="stat-card__value" id="card-impressions">—</div>
-        </div>
-        <div class="stat-card stat-card--green">
-          <div class="stat-card__meta">
-            <span class="stat-card__label">Clicks</span>
-            <span class="stat-card__period">Google Search</span>
+
+          <div class="panel">
+            <div class="panel__header">
+              <div>
+                <h2 class="panel__title">Top Pages</h2>
+                <p class="panel__subtitle">Most viewed pages this period</p>
+              </div>
+            </div>
+            <div class="table-wrap">
+              <table class="data-table" id="dashboard-pages-table">
+                <thead>
+                  <tr><th>Page</th><th>Title</th><th>Views</th></tr>
+                </thead>
+                <tbody id="dashboard-pages-body">
+                  <tr><td colspan="3" class="loading-cell">Loading...</td></tr>
+                </tbody>
+              </table>
+            </div>
           </div>
-          <div class="stat-card__value" id="card-clicks">—</div>
-        </div>
-        <div class="stat-card stat-card--purple">
-          <div class="stat-card__meta">
-            <span class="stat-card__label">Avg Position</span>
-            <span class="stat-card__period">Google Search</span>
-          </div>
-          <div class="stat-card__value" id="card-position">—</div>
-        </div>
-        <div class="stat-card stat-card--orange">
-          <div class="stat-card__meta">
-            <span class="stat-card__label">Sessions</span>
-            <span class="stat-card__period">GA4</span>
-          </div>
-          <div class="stat-card__value" id="card-sessions">—</div>
-        </div>
-        <div class="stat-card stat-card--teal">
-          <div class="stat-card__meta">
-            <span class="stat-card__label">Active Users</span>
-            <span class="stat-card__period">GA4</span>
-          </div>
-          <div class="stat-card__value" id="card-users">—</div>
         </div>
       </section>
 
-      <!-- Leads Section -->
-      <section class="panel" id="leads">
-        <div class="panel__header">
-          <div>
-            <h2 class="panel__title">Recent Leads</h2>
-            <p class="panel__subtitle">All submissions from website forms</p>
+      <!-- ===== LEADS SECTION ===== -->
+      <section class="section-panel" id="leads">
+        <div class="panel">
+          <div class="panel__header">
+            <div>
+              <h2 class="panel__title">All Leads</h2>
+              <p class="panel__subtitle">Complete list of website form submissions</p>
+            </div>
+            <input type="text" id="leads-search" class="search-input" placeholder="Search by name, company, email..." />
           </div>
-          <input type="text" id="leads-search" class="search-input" placeholder="Search by name, company, email..." />
-        </div>
-        <div class="table-wrap">
-          <table class="data-table" id="leads-table">
-            <thead>
-              <tr>
-                <th data-sort="receivedAt">Date ↕</th>
-                <th data-sort="name">Name ↕</th>
-                <th data-sort="company">Company ↕</th>
-                <th data-sort="email">Email ↕</th>
-                <th data-sort="aiUse">Interest ↕</th>
-                <th>Phone</th>
-              </tr>
-            </thead>
-            <tbody id="leads-body">
-              <tr><td colspan="6" class="loading-cell">Loading leads...</td></tr>
-            </tbody>
-          </table>
+          <div class="table-wrap">
+            <table class="data-table" id="leads-table">
+              <thead>
+                <tr>
+                  <th data-sort="receivedAt">Date ↕</th>
+                  <th data-sort="name">Name ↕</th>
+                  <th data-sort="company">Company ↕</th>
+                  <th data-sort="email">Email ↕</th>
+                  <th data-sort="aiUse">Interest ↕</th>
+                  <th>Phone</th>
+                </tr>
+              </thead>
+              <tbody id="leads-body">
+                <tr><td colspan="6" class="loading-cell">Loading leads...</td></tr>
+              </tbody>
+            </table>
+          </div>
         </div>
       </section>
 
-      <!-- Search Console Section -->
-      <section class="panel" id="search-console">
-        <div class="panel__header">
-          <div>
-            <h2 class="panel__title">Google Search Console</h2>
-            <p class="panel__subtitle">Search performance and keyword rankings</p>
-          </div>
-        </div>
+      <!-- ===== SEARCH CONSOLE SECTION ===== -->
+      <section class="section-panel" id="search-console">
         <div id="sc-notice" class="notice notice--warning hidden"></div>
 
-        <div class="chart-row">
-          <div class="chart-card">
-            <h3 class="chart-card__title">Impressions vs Clicks</h3>
-            <div class="chart-canvas-wrap">
-              <canvas id="sc-chart"></canvas>
+        <div class="panel">
+          <div class="panel__header">
+            <div>
+              <h2 class="panel__title">Search Queries</h2>
+              <p class="panel__subtitle">What people searched to find your site</p>
             </div>
+          </div>
+          <div class="chart-row">
+            <div class="chart-card">
+              <div class="chart-canvas-wrap">
+                <canvas id="sc-chart-detail"></canvas>
+              </div>
+            </div>
+          </div>
+          <div class="table-wrap">
+            <table class="data-table" id="sc-queries-table">
+              <thead>
+                <tr><th>Query</th><th>Clicks</th><th>Impressions</th><th>CTR</th><th>Position</th></tr>
+              </thead>
+              <tbody id="sc-queries-body">
+                <tr><td colspan="5" class="loading-cell">Loading Search Console data...</td></tr>
+              </tbody>
+            </table>
           </div>
         </div>
 
-        <div class="table-wrap">
-          <h3 class="table-title">Top Search Queries</h3>
-          <table class="data-table" id="sc-queries-table">
-            <thead>
-              <tr><th>Query</th><th>Clicks</th><th>Impressions</th><th>CTR</th><th>Position</th></tr>
-            </thead>
-            <tbody id="sc-queries-body">
-              <tr><td colspan="5" class="loading-cell">Loading Search Console data...</td></tr>
-            </tbody>
-          </table>
+        <div class="panel">
+          <div class="panel__header">
+            <div>
+              <h2 class="panel__title">Top Pages</h2>
+              <p class="panel__subtitle">Pages with most search visibility</p>
+            </div>
+          </div>
+          <div class="table-wrap">
+            <table class="data-table" id="sc-pages-table">
+              <thead>
+                <tr><th>Page</th><th>Clicks</th><th>Impressions</th><th>CTR</th><th>Position</th></tr>
+              </thead>
+              <tbody id="sc-pages-body">
+                <tr><td colspan="5" class="loading-cell">Loading...</td></tr>
+              </tbody>
+            </table>
+          </div>
         </div>
       </section>
 
-      <!-- GA4 Section -->
-      <section class="panel" id="analytics">
-        <div class="panel__header">
-          <div>
-            <h2 class="panel__title">Google Analytics 4</h2>
-            <p class="panel__subtitle">Website traffic and user behavior</p>
-          </div>
-        </div>
+      <!-- ===== ANALYTICS SECTION ===== -->
+      <section class="section-panel" id="analytics">
         <div id="ga4-notice" class="notice notice--warning hidden"></div>
 
-        <div class="chart-row">
-          <div class="chart-card">
-            <h3 class="chart-card__title">Top Events</h3>
-            <div class="chart-canvas-wrap chart-canvas-wrap--doughnut">
-              <canvas id="ga4-events-chart"></canvas>
+        <div class="panel">
+          <div class="panel__header">
+            <div>
+              <h2 class="panel__title">Top Events</h2>
+              <p class="panel__subtitle">Most frequent user interactions</p>
             </div>
+          </div>
+          <div class="chart-row">
+            <div class="chart-card">
+              <div class="chart-canvas-wrap chart-canvas-wrap--doughnut">
+                <canvas id="ga4-events-chart-detail"></canvas>
+              </div>
+            </div>
+          </div>
+          <div class="table-wrap">
+            <table class="data-table" id="ga4-events-table">
+              <thead>
+                <tr><th>Event Name</th><th>Count</th></tr>
+              </thead>
+              <tbody id="ga4-events-body">
+                <tr><td colspan="2" class="loading-cell">Loading GA4 data...</td></tr>
+              </tbody>
+            </table>
           </div>
         </div>
 
-        <div class="table-wrap">
-          <h3 class="table-title">Top Pages</h3>
-          <table class="data-table" id="ga4-pages-table">
-            <thead>
-              <tr><th>Page</th><th>Title</th><th>Views</th></tr>
-            </thead>
-            <tbody id="ga4-pages-body">
-              <tr><td colspan="3" class="loading-cell">Loading GA4 data...</td></tr>
-            </tbody>
-          </table>
-        </div>
-
-        <div class="table-wrap">
-          <h3 class="table-title">Events</h3>
-          <table class="data-table" id="ga4-events-table">
-            <thead>
-              <tr><th>Event Name</th><th>Count</th></tr>
-            </thead>
-            <tbody id="ga4-events-body">
-              <tr><td colspan="2" class="loading-cell">Loading GA4 data...</td></tr>
-            </tbody>
-          </table>
+        <div class="panel">
+          <div class="panel__header">
+            <div>
+              <h2 class="panel__title">Top Pages</h2>
+              <p class="panel__subtitle">Most viewed pages this period</p>
+            </div>
+          </div>
+          <div class="table-wrap">
+            <table class="data-table" id="ga4-pages-table">
+              <thead>
+                <tr><th>Page</th><th>Title</th><th>Views</th></tr>
+              </thead>
+              <tbody id="ga4-pages-body">
+                <tr><td colspan="3" class="loading-cell">Loading GA4 data...</td></tr>
+              </tbody>
+            </table>
+          </div>
         </div>
       </section>
 

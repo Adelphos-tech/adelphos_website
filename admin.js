@@ -5,10 +5,41 @@
   let allLeads = [];
   let leadsSort = { col: 'receivedAt', asc: false };
 
+  // Data caches for dashboard quick views
+  let scDataCache = null;
+  let ga4DataCache = null;
+
   // ── DOM refs ─────────────────────────────────────────────────────────────
   const dateTabs = document.querySelectorAll('.date-btn');
   const btnRefresh = document.getElementById('btn-refresh');
   const leadsSearch = document.getElementById('leads-search');
+  const pageTitle = document.getElementById('page-title');
+  const sidebarLinks = document.querySelectorAll('.sidebar__link');
+  const sections = document.querySelectorAll('.section-panel');
+
+  // ── Navigation ───────────────────────────────────────────────────────────
+  const sectionTitles = {
+    dashboard: 'Dashboard Overview',
+    leads: 'Leads',
+    'search-console': 'Search Console',
+    analytics: 'Google Analytics',
+  };
+
+  sidebarLinks.forEach(link => {
+    link.addEventListener('click', e => {
+      e.preventDefault();
+      const section = link.dataset.section;
+      if (!section) return;
+
+      sidebarLinks.forEach(l => l.classList.remove('active'));
+      link.classList.add('active');
+
+      sections.forEach(s => s.classList.remove('active'));
+      document.getElementById(section).classList.add('active');
+
+      pageTitle.textContent = sectionTitles[section] || 'Dashboard';
+    });
+  });
 
   // ── Date tabs ────────────────────────────────────────────────────────────
   dateTabs.forEach(tab => {
@@ -39,7 +70,7 @@
   // ── Load everything ──────────────────────────────────────────────────────
   async function loadAll() {
     btnRefresh.disabled = true;
-    btnRefresh.textContent = 'Loading...';
+    btnRefresh.textContent = '...';
     await Promise.all([loadLeads(), loadSearchConsole(), loadAnalytics()]);
     btnRefresh.disabled = false;
     btnRefresh.textContent = '↻';
@@ -53,8 +84,10 @@
       allLeads = await res.json();
       filterAndRenderLeads();
       updateLeadCount();
+      renderDashboardLeads();
     } catch (err) {
       document.getElementById('leads-body').innerHTML = `<tr><td colspan="6" class="loading-cell">${err.message}</td></tr>`;
+      document.getElementById('dashboard-leads-body').innerHTML = `<tr><td colspan="5" class="loading-cell">${err.message}</td></tr>`;
     }
   }
 
@@ -62,6 +95,24 @@
     const cutoff = Date.now() - currentDays * 24 * 60 * 60 * 1000;
     const count = allLeads.filter(l => new Date(l.receivedAt).getTime() > cutoff).length;
     document.getElementById('card-leads').textContent = fmtNum(count);
+  }
+
+  function renderDashboardLeads() {
+    const tbody = document.getElementById('dashboard-leads-body');
+    const recent = allLeads.slice(0, 5);
+    if (!recent.length) {
+      tbody.innerHTML = '<tr><td colspan="5" class="loading-cell">No leads yet.</td></tr>';
+      return;
+    }
+    tbody.innerHTML = recent.map(l => `
+      <tr>
+        <td>${fmtDate(l.receivedAt)}</td>
+        <td><strong>${escapeHtml(l.name || '—')}</strong></td>
+        <td>${escapeHtml(l.company || '—')}</td>
+        <td><a href="mailto:${escapeHtml(l.email || '')}">${escapeHtml(l.email || '—')}</a></td>
+        <td>${escapeHtml(l.aiUse || l.challenge || '—')}</td>
+      </tr>
+    `).join('');
   }
 
   function filterAndRenderLeads() {
@@ -97,7 +148,7 @@
         <td>${fmtDate(l.receivedAt)}</td>
         <td><strong>${escapeHtml(l.name || '—')}</strong></td>
         <td>${escapeHtml(l.company || '—')}</td>
-        <td><a href="mailto:${escapeHtml(l.email || '')}" style="color:var(--accent);text-decoration:none;">${escapeHtml(l.email || '—')}</a></td>
+        <td><a href="mailto:${escapeHtml(l.email || '')}">${escapeHtml(l.email || '—')}</a></td>
         <td>${escapeHtml(l.aiUse || l.challenge || '—')}</td>
         <td>${escapeHtml(l.phone || '—')}</td>
       </tr>
@@ -121,24 +172,29 @@
   async function loadSearchConsole() {
     const notice = document.getElementById('sc-notice');
     const qBody = document.getElementById('sc-queries-body');
+    const pBody = document.getElementById('sc-pages-body');
     qBody.innerHTML = '<tr><td colspan="5" class="loading-cell">Loading Search Console data...</td></tr>';
+    pBody.innerHTML = '<tr><td colspan="5" class="loading-cell">Loading...</td></tr>';
 
     try {
       const res = await fetch(`/admin/api/search-console?days=${currentDays}`);
       if (res.status === 503) {
         const j = await res.json();
         if (j.authUrl) {
-          notice.innerHTML = escapeHtml(j.error) + '<br><a href="' + escapeHtml(j.authUrl) + '" target="_blank" class="admin-connect-btn" style="display:inline-block;margin-top:.75rem;padding:.5rem 1rem;background:linear-gradient(135deg,#16a34a,#4ade80);color:#fff;border-radius:6px;text-decoration:none;font-weight:600;font-size:.85rem;">Connect Google Search Console</a>';
+          notice.innerHTML = escapeHtml(j.error) + '<br><a href="' + escapeHtml(j.authUrl) + '" target="_blank" style="display:inline-block;margin-top:.75rem;padding:.5rem 1rem;background:var(--accent);color:#fff;border-radius:6px;text-decoration:none;font-weight:600;font-size:.85rem;">Connect Google Search Console</a>';
         } else {
           notice.textContent = j.error || 'Google credentials not configured.';
         }
         notice.classList.remove('hidden');
         qBody.innerHTML = '<tr><td colspan="5" class="loading-cell">Not configured.</td></tr>';
+        pBody.innerHTML = '<tr><td colspan="5" class="loading-cell">Not configured.</td></tr>';
         clearScCards();
+        scDataCache = null;
         return;
       }
       if (!res.ok) throw new Error(await res.text());
       const data = await res.json();
+      scDataCache = data;
       notice.classList.add('hidden');
 
       // Update cards
@@ -146,7 +202,10 @@
       document.getElementById('card-clicks').textContent = fmtNum(data.summary?.clicks);
       document.getElementById('card-position').textContent = data.summary?.position ? parseFloat(data.summary.position).toFixed(1) : '—';
 
-      // Queries table
+      // Dashboard queries (top 5)
+      renderDashboardSc(data.queries || []);
+
+      // SC section — Queries table
       if (!data.queries?.length) {
         qBody.innerHTML = '<tr><td colspan="5" class="loading-cell">No data for this period.</td></tr>';
       } else {
@@ -161,14 +220,36 @@
         `).join('');
       }
 
-      // Chart
-      renderScChart(data.queries || []);
+      // SC section — Pages table
+      if (!data.pages?.length) {
+        pBody.innerHTML = '<tr><td colspan="5" class="loading-cell">No data for this period.</td></tr>';
+      } else {
+        pBody.innerHTML = data.pages.map(p => `
+          <tr>
+            <td><a href="${escapeHtml(p.page)}" target="_blank">${escapeHtml(p.page)}</a></td>
+            <td>${fmtNum(p.clicks)}</td>
+            <td>${fmtNum(p.impressions)}</td>
+            <td>${p.ctr}%</td>
+            <td>${p.position}</td>
+          </tr>
+        `).join('');
+      }
+
+      // Charts
+      renderScChart('sc-chart', data.queries || [], 5);
+      renderScChart('sc-chart-detail', data.queries || [], 10);
     } catch (err) {
       notice.textContent = 'Error loading Search Console: ' + err.message;
       notice.classList.remove('hidden');
       qBody.innerHTML = '<tr><td colspan="5" class="loading-cell">Failed to load.</td></tr>';
+      pBody.innerHTML = '<tr><td colspan="5" class="loading-cell">Failed to load.</td></tr>';
       clearScCards();
+      scDataCache = null;
     }
+  }
+
+  function renderDashboardSc(queries) {
+    // Nothing special needed — summary cards already show the totals
   }
 
   function clearScCards() {
@@ -177,21 +258,22 @@
     document.getElementById('card-position').textContent = '—';
   }
 
-  let scChartInstance = null;
-  function renderScChart(queries) {
-    const ctx = document.getElementById('sc-chart').getContext('2d');
-    if (scChartInstance) scChartInstance.destroy();
+  const scChartInstances = {};
+  function renderScChart(canvasId, queries, limit) {
+    const ctx = document.getElementById(canvasId)?.getContext('2d');
+    if (!ctx) return;
+    if (scChartInstances[canvasId]) scChartInstances[canvasId].destroy();
 
-    const top = queries.slice(0, 10);
+    const top = queries.slice(0, limit);
     if (!top.length) return;
 
-    scChartInstance = new Chart(ctx, {
+    scChartInstances[canvasId] = new Chart(ctx, {
       type: 'bar',
       data: {
         labels: top.map(q => q.query.length > 20 ? q.query.slice(0, 20) + '…' : q.query),
         datasets: [
-          { label: 'Impressions', data: top.map(q => q.impressions), backgroundColor: 'rgba(74,222,128,.35)', borderColor: 'rgba(74,222,128,.6)', borderWidth: 1, borderRadius: 4 },
-          { label: 'Clicks', data: top.map(q => q.clicks), backgroundColor: 'rgba(74,222,128,.7)', borderColor: 'rgba(74,222,128,1)', borderWidth: 1, borderRadius: 4 },
+          { label: 'Impressions', data: top.map(q => q.impressions), backgroundColor: 'rgba(37,99,235,.15)', borderColor: 'rgba(37,99,235,.5)', borderWidth: 1, borderRadius: 4 },
+          { label: 'Clicks', data: top.map(q => q.clicks), backgroundColor: 'rgba(37,99,235,.5)', borderColor: 'rgba(37,99,235,1)', borderWidth: 1, borderRadius: 4 },
         ],
       },
       options: {
@@ -211,8 +293,10 @@
     const notice = document.getElementById('ga4-notice');
     const pBody = document.getElementById('ga4-pages-body');
     const eBody = document.getElementById('ga4-events-body');
+    const dashPagesBody = document.getElementById('dashboard-pages-body');
     pBody.innerHTML = '<tr><td colspan="3" class="loading-cell">Loading GA4 data...</td></tr>';
     eBody.innerHTML = '<tr><td colspan="2" class="loading-cell">Loading GA4 data...</td></tr>';
+    dashPagesBody.innerHTML = '<tr><td colspan="3" class="loading-cell">Loading...</td></tr>';
 
     try {
       const res = await fetch(`/admin/api/analytics?days=${currentDays}`);
@@ -222,31 +306,47 @@
         notice.classList.remove('hidden');
         pBody.innerHTML = '<tr><td colspan="3" class="loading-cell">Not configured.</td></tr>';
         eBody.innerHTML = '<tr><td colspan="2" class="loading-cell">Not configured.</td></tr>';
+        dashPagesBody.innerHTML = '<tr><td colspan="3" class="loading-cell">Not configured.</td></tr>';
         clearGa4Cards();
+        ga4DataCache = null;
         return;
       }
       if (!res.ok) throw new Error(await res.text());
       const data = await res.json();
+      ga4DataCache = data;
       notice.classList.add('hidden');
 
       // Cards
       document.getElementById('card-sessions').textContent = fmtNum(data.overview?.sessions);
       document.getElementById('card-users').textContent = fmtNum(data.overview?.activeUsers);
 
-      // Pages table
+      // Dashboard pages (top 5)
       if (!data.topPages?.length) {
-        pBody.innerHTML = '<tr><td colspan="3" class="loading-cell">No data for this period.</td></tr>';
+        dashPagesBody.innerHTML = '<tr><td colspan="3" class="loading-cell">No data.</td></tr>';
       } else {
-        pBody.innerHTML = data.topPages.map(p => `
+        dashPagesBody.innerHTML = data.topPages.slice(0, 5).map(p => `
           <tr>
-            <td><a href="${escapeHtml(p.path)}" target="_blank" style="color:var(--accent);text-decoration:none;">${escapeHtml(p.path)}</a></td>
+            <td><a href="${escapeHtml(p.path)}" target="_blank">${escapeHtml(p.path)}</a></td>
             <td>${escapeHtml(p.title)}</td>
             <td>${fmtNum(p.views)}</td>
           </tr>
         `).join('');
       }
 
-      // Events table
+      // Analytics section — Pages table
+      if (!data.topPages?.length) {
+        pBody.innerHTML = '<tr><td colspan="3" class="loading-cell">No data for this period.</td></tr>';
+      } else {
+        pBody.innerHTML = data.topPages.map(p => `
+          <tr>
+            <td><a href="${escapeHtml(p.path)}" target="_blank">${escapeHtml(p.path)}</a></td>
+            <td>${escapeHtml(p.title)}</td>
+            <td>${fmtNum(p.views)}</td>
+          </tr>
+        `).join('');
+      }
+
+      // Analytics section — Events table
       if (!data.events?.length) {
         eBody.innerHTML = '<tr><td colspan="2" class="loading-cell">No events for this period.</td></tr>';
       } else {
@@ -258,14 +358,17 @@
         `).join('');
       }
 
-      // Events chart
-      renderGa4EventsChart(data.events || []);
+      // Charts
+      renderGa4EventsChart('ga4-events-chart', data.events || [], 5);
+      renderGa4EventsChart('ga4-events-chart-detail', data.events || [], 8);
     } catch (err) {
       notice.textContent = 'Error loading GA4: ' + err.message;
       notice.classList.remove('hidden');
       pBody.innerHTML = '<tr><td colspan="3" class="loading-cell">Failed to load.</td></tr>';
       eBody.innerHTML = '<tr><td colspan="2" class="loading-cell">Failed to load.</td></tr>';
+      dashPagesBody.innerHTML = '<tr><td colspan="3" class="loading-cell">Failed to load.</td></tr>';
       clearGa4Cards();
+      ga4DataCache = null;
     }
   }
 
@@ -274,23 +377,24 @@
     document.getElementById('card-users').textContent = '—';
   }
 
-  let ga4ChartInstance = null;
-  function renderGa4EventsChart(events) {
-    const ctx = document.getElementById('ga4-events-chart').getContext('2d');
-    if (ga4ChartInstance) ga4ChartInstance.destroy();
+  const ga4ChartInstances = {};
+  function renderGa4EventsChart(canvasId, events, limit) {
+    const ctx = document.getElementById(canvasId)?.getContext('2d');
+    if (!ctx) return;
+    if (ga4ChartInstances[canvasId]) ga4ChartInstances[canvasId].destroy();
 
-    const top = events.slice(0, 8);
+    const top = events.slice(0, limit);
     if (!top.length) return;
 
-    ga4ChartInstance = new Chart(ctx, {
+    ga4ChartInstances[canvasId] = new Chart(ctx, {
       type: 'doughnut',
       data: {
         labels: top.map(e => e.name),
         datasets: [{
           data: top.map(e => e.count),
           backgroundColor: [
-            '#4ade80', '#22c55e', '#16a34a', '#15803d',
-            '#86efac', '#bbf7d0', '#dcfce7', '#f0fdf4',
+            '#0f766e', '#14b8a6', '#2dd4bf', '#5eead4',
+            '#99f6e4', '#ccfbf1', '#0d9488', '#115e59',
           ],
           borderColor: '#ffffff',
           borderWidth: 2,
