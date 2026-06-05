@@ -8,6 +8,7 @@ const nodemailer = require('nodemailer');
 const path       = require('path');
 const fs         = require('fs');
 const { google } = require('googleapis');
+const Groq = require('groq-sdk');
 
 const app = express();
 app.use(express.json());
@@ -385,6 +386,172 @@ app.get('/admin/api/analytics', requireAdmin, async (req, res) => {
     });
   } catch (err) {
     console.error('[ERROR] GA4 API:', err.message);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ── Groq AI Analyst ───────────────────────────────────────────────────────────
+let groq = null;
+function getGroq() {
+  if (!groq && process.env.GROQ_API_KEY) {
+    groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
+  }
+  return groq;
+}
+
+const ANALYST_SYSTEM_PROMPT = `You are Adelphos AI Business Analyst — an expert digital marketing and SEO strategist specializing in AI infrastructure and enterprise automation.
+
+Your job is to analyze website analytics and search data, then provide actionable, concise insights.
+
+Rules:
+- Be direct and specific. No fluff.
+- Always tie insights back to business outcomes (leads, conversions, SEO growth).
+- When discussing SEO, reference specific queries, pages, and positions from the data.
+- Suggest concrete next steps (content ideas, keyword targets, funnel optimizations).
+- Use markdown formatting for readability.
+- Keep responses under 400 words unless the user asks for depth.`;
+
+app.post('/admin/api/ai-analyst', requireAdmin, async (req, res) => {
+  const client = getGroq();
+  if (!client) {
+    return res.status(503).json({ error: 'GROQ_API_KEY not set in .env' });
+  }
+  const { question, context } = req.body;
+  if (!question) return res.status(400).json({ error: 'Missing question.' });
+
+  try {
+    const completion = await client.chat.completions.create({
+      model: process.env.GROQ_MODEL || 'llama-3.3-70b-versatile',
+      messages: [
+        { role: 'system', content: ANALYST_SYSTEM_PROMPT },
+        { role: 'user', content: `Analytics context (JSON):\n${JSON.stringify(context || {}, null, 2)}\n\nUser question: ${question}` },
+      ],
+      temperature: 0.4,
+      max_tokens: 1024,
+    });
+    res.json({ answer: completion.choices[0].message.content });
+  } catch (err) {
+    console.error('[ERROR] Groq API:', err.message);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ── Funnel Analytics ────────────────────────────────────────────────────────
+app.get('/admin/api/funnel', requireAdmin, async (req, res) => {
+  const auth = getGoogleAuth();
+  if (!auth) return res.status(503).json({ error: 'Google credentials not configured.' });
+
+  const propertyId = process.env.GA4_PROPERTY_ID;
+  if (!propertyId) return res.status(503).json({ error: 'GA4_PROPERTY_ID not set.' });
+
+  const days = Math.min(parseInt(req.query.days || '28', 10), 90);
+  const startDate = new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+  const endDate = new Date().toISOString().split('T')[0];
+
+  try {
+    const analyticsData = google.analyticsdata({ version: 'v1beta', auth });
+
+    const [pageViews, events, sources, deviceCategory, sessionDuration, bounceRate] = await Promise.all([
+      analyticsData.properties.runReport({
+        property: `properties/${propertyId}`,
+        requestBody: {
+          dateRanges: [{ startDate, endDate }],
+          dimensions: [{ name: 'pagePath' }, { name: 'pageTitle' }],
+          metrics: [{ name: 'screenPageViews' }, { name: 'sessions' }],
+          orderBys: [{ metric: { metricName: 'screenPageViews' }, desc: true }],
+          limit: 50,
+        },
+      }),
+      analyticsData.properties.runReport({
+        property: `properties/${propertyId}`,
+        requestBody: {
+          dateRanges: [{ startDate, endDate }],
+          dimensions: [{ name: 'eventName' }],
+          metrics: [{ name: 'eventCount' }],
+          orderBys: [{ metric: { metricName: 'eventCount' }, desc: true }],
+          limit: 20,
+        },
+      }),
+      analyticsData.properties.runReport({
+        property: `properties/${propertyId}`,
+        requestBody: {
+          dateRanges: [{ startDate, endDate }],
+          dimensions: [{ name: 'sessionDefaultChannelGroup' }],
+          metrics: [{ name: 'sessions' }, { name: 'activeUsers' }],
+          orderBys: [{ metric: { metricName: 'sessions' }, desc: true }],
+          limit: 10,
+        },
+      }),
+      analyticsData.properties.runReport({
+        property: `properties/${propertyId}`,
+        requestBody: {
+          dateRanges: [{ startDate, endDate }],
+          dimensions: [{ name: 'deviceCategory' }],
+          metrics: [{ name: 'sessions' }, { name: 'bounceRate' }],
+          orderBys: [{ metric: { metricName: 'sessions' }, desc: true }],
+          limit: 10,
+        },
+      }),
+      analyticsData.properties.runReport({
+        property: `properties/${propertyId}`,
+        requestBody: {
+          dateRanges: [{ startDate, endDate }],
+          dimensions: [{ name: 'pagePath' }],
+          metrics: [{ name: 'averageSessionDuration' }],
+          orderBys: [{ metric: { metricName: 'averageSessionDuration' }, desc: true }],
+          limit: 20,
+        },
+      }),
+      analyticsData.properties.runReport({
+        property: `properties/${propertyId}`,
+        requestBody: {
+          dateRanges: [{ startDate, endDate }],
+          dimensions: [{ name: 'pagePath' }],
+          metrics: [{ name: 'bounceRate' }],
+          orderBys: [{ metric: { metricName: 'bounceRate' }, desc: true }],
+          limit: 20,
+        },
+      }),
+    ]);
+
+    const pages = (pageViews.data.rows || []).map(r => ({
+      path: r.dimensionValues[0].value,
+      title: r.dimensionValues[1].value,
+      views: parseInt(r.metricValues[0].value, 10),
+      sessions: parseInt(r.metricValues[1].value, 10),
+    }));
+
+    // Compute stage metrics
+    const awarenessViews = pages.filter(p => p.path === '/' || p.path === '/blog' || p.path === '/blog/').reduce((s, p) => s + p.views, 0);
+    const interestViews = pages.filter(p => p.path.startsWith('/blog/') && p.path !== '/blog/' && p.path !== '/blog').reduce((s, p) => s + p.views, 0) + (pages.find(p => p.path === '/portfolio')?.views || 0);
+    const considerationViews = pages.filter(p => ['/contact', '/simulator', '/about'].includes(p.path)).reduce((s, p) => s + p.views, 0);
+    const conversionEvents = (events.data.rows || []).filter(r => r.dimensionValues[0].value === 'contact_form_submit').reduce((s, r) => s + parseInt(r.metricValues[0].value, 10), 0);
+
+    const funnel = [
+      { stage: 'Awareness', views: awarenessViews, description: 'Homepage & Blog landing pages' },
+      { stage: 'Interest', views: interestViews, description: 'Blog articles & Portfolio' },
+      { stage: 'Consideration', views: considerationViews, description: 'Contact, About, Simulator' },
+      { stage: 'Conversion', views: conversionEvents, description: 'Lead form submissions' },
+    ];
+
+    // Add conversion rates between stages
+    for (let i = 1; i < funnel.length; i++) {
+      const prev = funnel[i - 1].views;
+      const curr = funnel[i].views;
+      funnel[i].conversionRate = prev > 0 ? ((curr / prev) * 100).toFixed(2) + '%' : '0%';
+    }
+
+    res.json({
+      funnel,
+      pages,
+      events: (events.data.rows || []).map(r => ({ name: r.dimensionValues[0].value, count: parseInt(r.metricValues[0].value, 10) })),
+      sources: (sources.data.rows || []).map(r => ({ source: r.dimensionValues[0].value, sessions: parseInt(r.metricValues[0].value, 10), users: parseInt(r.metricValues[1].value, 10) })),
+      devices: (deviceCategory.data.rows || []).map(r => ({ device: r.dimensionValues[0].value, sessions: parseInt(r.metricValues[0].value, 10), bounceRate: parseFloat(r.metricValues[1].value).toFixed(2) })),
+      topEngagedPages: (sessionDuration.data.rows || []).map(r => ({ path: r.dimensionValues[0].value, avgDuration: parseFloat(r.metricValues[0].value).toFixed(1) })),
+      topBouncePages: (bounceRate.data.rows || []).map(r => ({ path: r.dimensionValues[0].value, bounceRate: (parseFloat(r.metricValues[0].value) * 100).toFixed(1) })),
+    });
+  } catch (err) {
+    console.error('[ERROR] Funnel API:', err.message);
     res.status(500).json({ error: err.message });
   }
 });

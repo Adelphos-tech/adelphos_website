@@ -25,6 +25,8 @@
         <a href="#" class="sidebar__link" data-section="leads">Leads</a>
         <a href="#" class="sidebar__link" data-section="search-console">Search Console</a>
         <a href="#" class="sidebar__link" data-section="analytics">Analytics</a>
+        <a href="#" class="sidebar__link" data-section="funnel">Funnel View</a>
+        <a href="#" class="sidebar__link" data-section="ai-analyst">AI Analyst</a>
       </nav>
       <div class="sidebar__footer">
         <a href="/admin/logout" class="sidebar__logout">Logout</a>
@@ -426,6 +428,121 @@
                 <tr><td colspan="3" class="loading-cell">Loading GA4 data...</td></tr>
               </tbody>
             </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- ===== FUNNEL SECTION ===== -->
+      <section class="section-panel" id="funnel">
+        <div id="funnel-notice" class="notice notice--warning hidden"></div>
+
+        <div class="panel">
+          <div class="panel__header">
+            <div>
+              <h2 class="panel__title">Conversion Funnel</h2>
+              <p class="panel__subtitle">Visitor journey from awareness to conversion</p>
+            </div>
+          </div>
+          <div class="chart-row">
+            <div class="chart-card">
+              <div class="chart-canvas-wrap" style="height:340px;">
+                <canvas id="funnel-chart"></canvas>
+              </div>
+            </div>
+          </div>
+          <div class="table-wrap" style="margin-top:1.5rem;">
+            <table class="data-table" id="funnel-table">
+              <thead>
+                <tr><th>Stage</th><th>Description</th><th>Views / Events</th><th>Conversion Rate</th></tr>
+              </thead>
+              <tbody id="funnel-body">
+                <tr><td colspan="4" class="loading-cell">Loading funnel data...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="dashboard-tables">
+          <div class="panel">
+            <div class="panel__header">
+              <div>
+                <h2 class="panel__title">Top Engaged Pages</h2>
+                <p class="panel__subtitle">Highest average session duration</p>
+              </div>
+            </div>
+            <div class="table-wrap">
+              <table class="data-table" id="engaged-pages-table">
+                <thead><tr><th>Page</th><th>Avg Duration (s)</th></tr></thead>
+                <tbody id="engaged-pages-body"><tr><td colspan="2" class="loading-cell">Loading...</td></tr></tbody>
+              </table>
+            </div>
+          </div>
+          <div class="panel">
+            <div class="panel__header">
+              <div>
+                <h2 class="panel__title">Highest Bounce Pages</h2>
+                <p class="panel__subtitle">Pages where users leave most often</p>
+              </div>
+            </div>
+            <div class="table-wrap">
+              <table class="data-table" id="bounce-pages-table">
+                <thead><tr><th>Page</th><th>Bounce Rate</th></tr></thead>
+                <tbody id="bounce-pages-body"><tr><td colspan="2" class="loading-cell">Loading...</td></tr></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ===== AI ANALYST SECTION ===== -->
+      <section class="section-panel" id="ai-analyst">
+        <div id="ai-notice" class="notice notice--warning hidden"></div>
+
+        <div class="panel">
+          <div class="panel__header">
+            <div>
+              <h2 class="panel__title">AI Business Analyst</h2>
+              <p class="panel__subtitle">Ask questions about your SEO, traffic, and conversion data</p>
+            </div>
+          </div>
+
+          <div class="ai-chat">
+            <div class="ai-chat__messages" id="ai-messages">
+              <div class="ai-message ai-message--system">
+                <div class="ai-message__avatar">AI</div>
+                <div class="ai-message__content">
+                  <p>Hello! I'm your Adelphos AI Business Analyst. I can help you:</p>
+                  <ul>
+                    <li>Analyze traffic trends and SEO performance</li>
+                    <li>Identify content opportunities from search queries</li>
+                    <li>Review funnel drop-offs and suggest fixes</li>
+                    <li>Compare blog post performance</li>
+                  </ul>
+                  <p>What would you like to analyze today?</p>
+                </div>
+              </div>
+            </div>
+            <div class="ai-chat__input-row">
+              <input type="text" id="ai-input" class="ai-chat__input" placeholder="Ask about your analytics data..." />
+              <button id="ai-send" class="ai-chat__send">Ask</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="dashboard-tables">
+          <div class="panel">
+            <div class="panel__header">
+              <div>
+                <h2 class="panel__title">Quick Insights</h2>
+                <p class="panel__subtitle">Pre-computed AI analysis of current period</p>
+              </div>
+              <button id="ai-insights-btn" class="btn-icon" title="Generate insights">✨ Generate</button>
+            </div>
+            <div class="table-wrap">
+              <div id="ai-insights-body" class="ai-insights">
+                <p class="loading-cell">Click "Generate" to run AI analysis on your current data.</p>
+              </div>
+            </div>
           </div>
         </div>
       </section>

@@ -23,6 +23,8 @@
     leads: 'Leads',
     'search-console': 'Search Console',
     analytics: 'Google Analytics',
+    funnel: 'Conversion Funnel',
+    'ai-analyst': 'AI Business Analyst',
   };
 
   sidebarLinks.forEach(link => {
@@ -90,7 +92,7 @@
   async function loadAll() {
     btnRefresh.disabled = true;
     btnRefresh.textContent = '...';
-    await Promise.all([loadLeads(), loadSearchConsole(), loadAnalytics()]);
+    await Promise.all([loadLeads(), loadSearchConsole(), loadAnalytics(), loadFunnel()]);
     btnRefresh.disabled = false;
     btnRefresh.textContent = '↻';
   }
@@ -542,6 +544,207 @@
       },
     });
   }
+
+  // ── Funnel ───────────────────────────────────────────────────────────────
+  let funnelDataCache = null;
+
+  async function loadFunnel() {
+    const notice = document.getElementById('funnel-notice');
+    const fBody = document.getElementById('funnel-body');
+    const eBody = document.getElementById('engaged-pages-body');
+    const bBody = document.getElementById('bounce-pages-body');
+
+    fBody.innerHTML = '<tr><td colspan="4" class="loading-cell">Loading funnel data...</td></tr>';
+    eBody.innerHTML = '<tr><td colspan="2" class="loading-cell">Loading...</td></tr>';
+    bBody.innerHTML = '<tr><td colspan="2" class="loading-cell">Loading...</td></tr>';
+
+    try {
+      const res = await fetch(`/admin/api/funnel?days=${currentDays}`);
+      if (res.status === 503) {
+        const j = await res.json();
+        notice.textContent = j.error || 'Google credentials not configured.';
+        notice.classList.remove('hidden');
+        fBody.innerHTML = '<tr><td colspan="4" class="loading-cell">Not configured.</td></tr>';
+        eBody.innerHTML = '<tr><td colspan="2" class="loading-cell">Not configured.</td></tr>';
+        bBody.innerHTML = '<tr><td colspan="2" class="loading-cell">Not configured.</td></tr>';
+        funnelDataCache = null;
+        return;
+      }
+      if (!res.ok) throw new Error(await res.text());
+      const data = await res.json();
+      funnelDataCache = data;
+      notice.classList.add('hidden');
+
+      // Funnel table
+      if (!data.funnel?.length) {
+        fBody.innerHTML = '<tr><td colspan="4" class="loading-cell">No funnel data.</td></tr>';
+      } else {
+        fBody.innerHTML = data.funnel.map((s, i) => `
+          <tr>
+            <td><strong>${escapeHtml(s.stage)}</strong></td>
+            <td>${escapeHtml(s.description)}</td>
+            <td>${fmtNum(s.views)}</td>
+            <td>${i === 0 ? '—' : escapeHtml(s.conversionRate || '—')}</td>
+          </tr>
+        `).join('');
+      }
+
+      // Engaged pages
+      if (!data.topEngagedPages?.length) {
+        eBody.innerHTML = '<tr><td colspan="2" class="loading-cell">No data.</td></tr>';
+      } else {
+        eBody.innerHTML = data.topEngagedPages.map(p => `
+          <tr>
+            <td>${escapeHtml(p.path)}</td>
+            <td>${parseFloat(p.avgDuration).toFixed(1)}s</td>
+          </tr>
+        `).join('');
+      }
+
+      // Bounce pages
+      if (!data.topBouncePages?.length) {
+        bBody.innerHTML = '<tr><td colspan="2" class="loading-cell">No data.</td></tr>';
+      } else {
+        bBody.innerHTML = data.topBouncePages.map(p => `
+          <tr>
+            <td>${escapeHtml(p.path)}</td>
+            <td>${escapeHtml(p.bounceRate)}%</td>
+          </tr>
+        `).join('');
+      }
+
+      renderFunnelChart(data.funnel || []);
+    } catch (err) {
+      notice.textContent = 'Error loading funnel: ' + err.message;
+      notice.classList.remove('hidden');
+      fBody.innerHTML = '<tr><td colspan="4" class="loading-cell">Failed to load.</td></tr>';
+      eBody.innerHTML = '<tr><td colspan="2" class="loading-cell">Failed.</td></tr>';
+      bBody.innerHTML = '<tr><td colspan="2" class="loading-cell">Failed.</td></tr>';
+      funnelDataCache = null;
+    }
+  }
+
+  const funnelChartInstances = {};
+  function renderFunnelChart(funnel) {
+    const ctx = document.getElementById('funnel-chart')?.getContext('2d');
+    if (!ctx) return;
+    if (funnelChartInstances['funnel-chart']) funnelChartInstances['funnel-chart'].destroy();
+    if (!funnel.length) return;
+
+    funnelChartInstances['funnel-chart'] = new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels: funnel.map(s => s.stage),
+        datasets: [{
+          label: 'Visitors / Events',
+          data: funnel.map(s => s.views),
+          backgroundColor: ['#0f766e', '#14b8a6', '#2dd4bf', '#5eead4'],
+          borderColor: ['#0f766e', '#14b8a6', '#2dd4bf', '#5eead4'],
+          borderWidth: 1,
+          borderRadius: 6,
+        }],
+      },
+      options: {
+        indexAxis: 'y',
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            backgroundColor: '#1e293b',
+            titleColor: '#f8fafc',
+            bodyColor: '#f8fafc',
+            padding: 10,
+            cornerRadius: 6,
+            callbacks: {
+              afterLabel: (ctx) => {
+                const stage = funnel[ctx.dataIndex];
+                return stage.conversionRate ? `Conversion: ${stage.conversionRate}` : '';
+              },
+            },
+          },
+        },
+        scales: {
+          x: { ticks: { color: '#64748b' }, grid: { color: 'rgba(0,0,0,.05)' }, beginAtZero: true },
+          y: { ticks: { color: '#64748b', font: { weight: '600' } }, grid: { display: false } },
+        },
+      },
+    });
+  }
+
+  // ── AI Analyst ─────────────────────────────────────────────────────────────
+  const aiMessages = document.getElementById('ai-messages');
+  const aiInput = document.getElementById('ai-input');
+  const aiSend = document.getElementById('ai-send');
+  const aiInsightsBtn = document.getElementById('ai-insights-btn');
+  const aiInsightsBody = document.getElementById('ai-insights-body');
+
+  function appendAiMessage(role, html) {
+    const div = document.createElement('div');
+    div.className = `ai-message ai-message--${role}`;
+    div.innerHTML = `
+      <div class="ai-message__avatar">${role === 'user' ? 'You' : 'AI'}</div>
+      <div class="ai-message__content">${html}</div>
+    `;
+    aiMessages.appendChild(div);
+    aiMessages.scrollTop = aiMessages.scrollHeight;
+  }
+
+  async function askAi(question, context) {
+    try {
+      const res = await fetch('/admin/api/ai-analyst', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ question, context }),
+      });
+      if (!res.ok) {
+        const j = await res.json().catch(() => ({}));
+        throw new Error(j.error || res.statusText);
+      }
+      const data = await res.json();
+      return data.answer;
+    } catch (err) {
+      return '**Error:** ' + err.message;
+    }
+  }
+
+  async function sendAiMessage() {
+    const q = aiInput.value.trim();
+    if (!q) return;
+    aiInput.value = '';
+    appendAiMessage('user', escapeHtml(q));
+    appendAiMessage('system', '<em>Thinking...</em>');
+    const thinking = aiMessages.lastElementChild;
+
+    const context = {
+      dateRangeDays: currentDays,
+      ga4: ga4DataCache,
+      searchConsole: scDataCache,
+      funnel: funnelDataCache,
+    };
+
+    const answer = await askAi(q, context);
+    thinking.querySelector('.ai-message__content').innerHTML = answer;
+  }
+
+  aiSend.addEventListener('click', sendAiMessage);
+  aiInput.addEventListener('keydown', e => { if (e.key === 'Enter') sendAiMessage(); });
+
+  aiInsightsBtn.addEventListener('click', async () => {
+    aiInsightsBody.innerHTML = '<p class="loading-cell">Analyzing data...</p>';
+    aiInsightsBtn.disabled = true;
+
+    const context = {
+      dateRangeDays: currentDays,
+      ga4: ga4DataCache,
+      searchConsole: scDataCache,
+      funnel: funnelDataCache,
+    };
+
+    const answer = await askAi('Give me a top-level SEO and business analysis of this period. Highlight 3 wins, 3 risks, and 3 actionable next steps. Include content and keyword recommendations.', context);
+    aiInsightsBody.innerHTML = `<div class="ai-insights__content">${answer}</div>`;
+    aiInsightsBtn.disabled = false;
+  });
 
   // ── Utils ──────────────────────────────────────────────────────────────────
   function escapeHtml(str) {
