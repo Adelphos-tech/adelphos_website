@@ -300,6 +300,9 @@ body { overflow-x: hidden; background: var(--dark); }
 .site-footer { margin-top: 8rem; padding: 2rem 2.5rem; border-top: 1px solid var(--w10); }
 .site-footer__inner { max-width: 1100px; margin: 0 auto; display: flex; align-items: center; justify-content: space-between; }
 .site-footer__copy { font-size: .75rem; color: var(--w30); }
+.site-footer__link--icon-text { display: inline-flex; align-items: center; gap: .35rem; color: var(--w40); text-decoration: none; font-size: .75rem; transition: color .25s; }
+.site-footer__link--icon-text:hover { color: var(--white); }
+.site-footer__link--icon-text svg { flex-shrink: 0; width: 16px; height: 16px; }
 
 /* ══════════════════════════════════════
    CASE STUDIES

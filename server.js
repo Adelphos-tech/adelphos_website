@@ -394,6 +394,14 @@ app.get('/simulator', (req, res) => {
   res.sendFile(path.join(__dirname, 'simulator.html'));
 });
 
+app.get('/portfolio', (req, res) => {
+  res.sendFile(path.join(__dirname, 'portfolio.html'));
+});
+
+app.get('/project-opserp', (req, res) => {
+  res.sendFile(path.join(__dirname, 'project-opserp.html'));
+});
+
 app.get('/blog', (req, res) => {
   res.sendFile(path.join(__dirname, 'blog.html'));
 });

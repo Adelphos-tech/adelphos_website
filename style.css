@@ -61,3 +61,4 @@
 .blog-card__readtime{font-size:.7rem;color:rgba(255,255,255,.3);font-style:italic}
 .blog-card:hover .blog-card__title{color:#4ade80;transition:color .2s}
 .blog-teaser-card:hover .blog-teaser-card__title{color:#4ade80;transition:color .2s}
+.site-footer__link--icon-text{display:inline-flex;align-items:center;gap:.35rem;color:var(--w40);text-decoration:none;font-size:.75rem;transition:color .25s}.site-footer__link--icon-text:hover{color:var(--white)}.site-footer__link--icon-text svg{flex-shrink:0;width:16px;height:16px}
