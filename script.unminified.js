@@ -370,7 +370,7 @@
     const pillBtns = document.querySelectorAll('.calc-pill');
     if (!pillBtns.length) return;
 
-    // ─── Real market pricing (GPT-4o, May 2025) ───
+    // ─── Real market pricing (GPT-4o, June 2026) ───
     // Input: $5/1M | Output: $15/1M → blended ~$8/1M at 50/50 ratio
     const CLOUD_COST_PER_M = 8; // blended $/1M tokens
 
@@ -378,10 +378,14 @@
     // small:  50M tokens/mo = heavy chatbot + team assistant (~1,700 GPT-4o calls/day)
     // medium: 300M tokens/mo = 50-staff RAG brain + customer automation pipeline
     // large:  1,200M tokens/mo = 24/7 voice + docs + sales calls at scale
+    // Updated June 2026: New NVIDIA Blackwell pricing
+    // RTX Pro 6000 Blackwell: ~$8,500 (96GB GDDR7) - flagship workstation
+    // RTX Pro 5000 Blackwell: ~$4,200-$6,300 (48-72GB GDDR7) - mid-tier
+    // B200/B300 cloud: $2.99-$27/hr (Blackwell datacenter GPUs)
     const PROFILES = {
-      small:  { tokens: 50,   hw: 8000,  ops: 100, label: 'Getting Started' },
-      medium: { tokens: 300,  hw: 25000, ops: 200, label: 'Growing Team'    },
-      large:  { tokens: 1200, hw: 80000, ops: 800, label: 'Full Operation'  },
+      small:  { tokens: 50,   hw: 8500,  ops: 100, label: 'Getting Started' },
+      medium: { tokens: 300,  hw: 28000, ops: 200, label: 'Growing Team'    },
+      large:  { tokens: 1200, hw: 95000, ops: 800, label: 'Full Operation'  },
     };
 
     let activeProfile = 'small';
