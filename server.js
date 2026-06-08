@@ -839,6 +839,122 @@ app.post('/submit-lead', async (req, res) => {
   }
 });
 
+// ── Site Search Index ─────────────────────────────────────────────────────────
+const SEARCHABLE_DIRS = [
+  __dirname,
+  path.join(__dirname, 'blog'),
+];
+
+const EXCLUDED_FILES = new Set([
+  'admin.html', 'admin-login.html', '404.html',
+  'google0c4ccf73ca2db1c8.html',
+]);
+
+function stripHtml(html) {
+  return html
+    .replace(/<script[^>]*>[\s\S]*?<\/script>/gi, '')
+    .replace(/<style[^>]*>[\s\S]*?<\/style>/gi, '')
+    .replace(/<[^>]+>/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+function extractHeadings(html) {
+  const headings = [];
+  const regex = /<h([1-6])[^>]*>([\s\S]*?)<\/h\1>/gi;
+  let m;
+  while ((m = regex.exec(html)) !== null) {
+    const level = parseInt(m[1], 10);
+    const text = stripHtml(m[2]).slice(0, 200);
+    if (text) headings.push({ level, text });
+  }
+  return headings;
+}
+
+function extractMeta(html, name) {
+  const match = html.match(new RegExp(`<meta[^>]*name=["']${name}["'][^>]*content=["']([^"']+)["']`, 'i'));
+  if (match) return match[1];
+  const ogMatch = html.match(new RegExp(`<meta[^>]*property=["']og:${name}["'][^>]*content=["']([^"']+)["']`, 'i'));
+  return ogMatch ? ogMatch[1] : '';
+}
+
+function buildSearchIndex() {
+  const index = [];
+  for (const dir of SEARCHABLE_DIRS) {
+    if (!fs.existsSync(dir)) continue;
+    const files = fs.readdirSync(dir).filter(f => f.endsWith('.html'));
+    for (const file of files) {
+      if (EXCLUDED_FILES.has(file)) continue;
+      const filePath = path.join(dir, file);
+      const html = fs.readFileSync(filePath, 'utf8');
+
+      const titleMatch = html.match(/<title>([^<]*)<\/title>/i);
+      const title = titleMatch ? titleMatch[1].trim() : file;
+
+      const description = extractMeta(html, 'description');
+      const headings = extractHeadings(html);
+      const bodyText = stripHtml(html).slice(0, 8000);
+
+      const relativeDir = path.relative(__dirname, dir);
+      const slug = file.replace(/\.html$/, '');
+      const urlPath = relativeDir ? `/${relativeDir}/${slug}` : `/${slug}`;
+
+      index.push({
+        url: urlPath,
+        title,
+        description,
+        headings,
+        bodyText,
+        type: relativeDir === 'blog' ? 'blog' : 'page',
+      });
+    }
+  }
+  return index;
+}
+
+let searchIndexCache = null;
+function getSearchIndex() {
+  if (!searchIndexCache) searchIndexCache = buildSearchIndex();
+  return searchIndexCache;
+}
+
+// Public search API
+app.get('/api/search', (req, res) => {
+  const q = (req.query.q || '').toLowerCase().trim();
+  if (!q) return res.json({ results: [], count: 0 });
+
+  const index = getSearchIndex();
+  const results = index
+    .map(doc => {
+      let score = 0;
+      const titleLower = doc.title.toLowerCase();
+      const descLower = doc.description.toLowerCase();
+      const bodyLower = doc.bodyText.toLowerCase();
+
+      if (titleLower.includes(q)) score += 10;
+      if (titleLower.startsWith(q)) score += 5;
+      if (descLower.includes(q)) score += 5;
+
+      const headingMatches = doc.headings.filter(h => h.text.toLowerCase().includes(q)).length;
+      score += headingMatches * 3;
+
+      const bodyMatches = (bodyLower.match(new RegExp(q.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'g')) || []).length;
+      score += Math.min(bodyMatches, 10);
+
+      return { ...doc, score, bodyText: doc.bodyText.slice(0, 300) + '...' };
+    })
+    .filter(r => r.score > 0)
+    .sort((a, b) => b.score - a.score)
+    .slice(0, 20);
+
+  res.json({ results, count: results.length });
+});
+
+// Full index endpoint (for client-side search libraries)
+app.get('/api/search-index', (req, res) => {
+  res.json(getSearchIndex());
+});
+
 // ── Block direct access to admin HTML files ─────────────────────────────────
 app.get('/admin.html', (req, res) => res.redirect('/admin'));
 app.get('/admin-login.html', (req, res) => res.redirect('/admin/login'));
