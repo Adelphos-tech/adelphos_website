@@ -673,3 +673,148 @@ body {
 #funnel-chart {
   max-height: 320px;
 }
+
+/* ── Invoice Form ──────────────────────────────────────────────────────────── */
+.invoice-form__grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+.invoice-form__field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.invoice-form__field label {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.invoice-form__field input,
+.invoice-form__field select,
+.invoice-form__field textarea {
+  padding: 0.55rem 0.75rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  font-family: inherit;
+  font-size: 0.85rem;
+  color: var(--text);
+  background: var(--bg);
+  outline: none;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.invoice-form__field input:focus,
+.invoice-form__field select:focus,
+.invoice-form__field textarea:focus {
+  border-color: var(--accent-light);
+  box-shadow: 0 0 0 3px var(--accent-bg);
+}
+
+.inv-item-row {
+  display: grid;
+  grid-template-columns: 2fr 0.6fr 0.8fr 0.8fr auto;
+  gap: 0.5rem;
+  align-items: center;
+  margin-bottom: 0.5rem;
+}
+
+.inv-item-row input {
+  padding: 0.5rem 0.65rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  font-family: inherit;
+  font-size: 0.82rem;
+  color: var(--text);
+  background: var(--bg);
+  outline: none;
+}
+
+.inv-item-row input:focus {
+  border-color: var(--accent-light);
+}
+
+.inv-item-amount {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text);
+  text-align: right;
+}
+
+.invoice-form__totals {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  max-width: 320px;
+  margin-left: auto;
+  margin-top: 1.25rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--border);
+}
+
+.invoice-form__total-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+}
+
+.invoice-form__total-row strong {
+  color: var(--text);
+  font-weight: 600;
+}
+
+.invoice-form__total-row--grand {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--text);
+  margin-top: 0.25rem;
+  padding-top: 0.5rem;
+  border-top: 1px solid var(--border);
+}
+
+.invoice-form__total-row--grand strong {
+  font-size: 1.1rem;
+  font-weight: 800;
+}
+
+.invoice-form__actions {
+  display: flex;
+  align-items: center;
+  margin-top: 1.25rem;
+}
+
+.inv-status {
+  display: inline-block;
+  padding: 0.25rem 0.6rem;
+  border-radius: 20px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.inv-status--sent {
+  background: var(--blue-bg);
+  color: var(--blue);
+}
+
+.inv-status--paid {
+  background: rgba(22, 163, 74, 0.12);
+  color: var(--green);
+}
+
+.inv-status--overdue {
+  background: rgba(220, 38, 38, 0.08);
+  color: var(--red);
+}
+
+@media (max-width: 768px) {
+  .invoice-form__grid { grid-template-columns: 1fr; }
+  .inv-item-row { grid-template-columns: 1fr; }
+}

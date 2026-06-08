@@ -27,6 +27,7 @@
         <a href="#" class="sidebar__link" data-section="analytics">Analytics</a>
         <a href="#" class="sidebar__link" data-section="funnel">Funnel View</a>
         <a href="#" class="sidebar__link" data-section="ai-analyst">AI Analyst</a>
+        <a href="#" class="sidebar__link" data-section="invoices">Invoices</a>
       </nav>
       <div class="sidebar__footer">
         <a href="/admin/logout" class="sidebar__logout">Logout</a>
@@ -490,6 +491,167 @@
                 <tbody id="bounce-pages-body"><tr><td colspan="2" class="loading-cell">Loading...</td></tr></tbody>
               </table>
             </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ===== INVOICES SECTION ===== -->
+      <section class="section-panel" id="invoices">
+        <!-- Summary Cards -->
+        <section class="cards">
+          <div class="stat-card stat-card--green">
+            <div class="stat-card__meta">
+              <span class="stat-card__label">Total Revenue</span>
+              <span class="stat-card__period">all time</span>
+            </div>
+            <div class="stat-card__value" id="inv-card-revenue">—</div>
+          </div>
+          <div class="stat-card stat-card--blue">
+            <div class="stat-card__meta">
+              <span class="stat-card__label">This Month</span>
+              <span class="stat-card__period">revenue</span>
+            </div>
+            <div class="stat-card__value" id="inv-card-month">—</div>
+          </div>
+          <div class="stat-card stat-card--purple">
+            <div class="stat-card__meta">
+              <span class="stat-card__label">Invoices</span>
+              <span class="stat-card__period">count</span>
+            </div>
+            <div class="stat-card__value" id="inv-card-count">—</div>
+          </div>
+          <div class="stat-card stat-card--orange">
+            <div class="stat-card__meta">
+              <span class="stat-card__label">Unpaid</span>
+              <span class="stat-card__period">pending</span>
+            </div>
+            <div class="stat-card__value" id="inv-card-unpaid">—</div>
+          </div>
+        </section>
+
+        <!-- Monthly Sales Chart -->
+        <div class="panel">
+          <div class="panel__header">
+            <div>
+              <h2 class="panel__title">Monthly Sales</h2>
+              <p class="panel__subtitle">Revenue trend based on invoices generated each month</p>
+            </div>
+          </div>
+          <div class="chart-row">
+            <div class="chart-card">
+              <div class="chart-canvas-wrap" style="height:320px;">
+                <canvas id="sales-chart"></canvas>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Create Invoice Form -->
+        <div class="panel">
+          <div class="panel__header">
+            <div>
+              <h2 class="panel__title">Create Invoice</h2>
+              <p class="panel__subtitle">Generate a new invoice for a client</p>
+            </div>
+          </div>
+          <div class="table-wrap">
+            <form id="invoice-form" class="invoice-form">
+              <div class="invoice-form__grid">
+                <div class="invoice-form__field">
+                  <label>Client Name *</label>
+                  <input type="text" id="inv-client-name" required placeholder="Acme Corp" />
+                </div>
+                <div class="invoice-form__field">
+                  <label>Client Email</label>
+                  <input type="email" id="inv-client-email" placeholder="billing@acme.com" />
+                </div>
+                <div class="invoice-form__field">
+                  <label>Issue Date</label>
+                  <input type="date" id="inv-issue-date" />
+                </div>
+                <div class="invoice-form__field">
+                  <label>Due Date</label>
+                  <input type="date" id="inv-due-date" />
+                </div>
+                <div class="invoice-form__field">
+                  <label>Tax Rate (%)</label>
+                  <input type="number" id="inv-tax-rate" value="18" min="0" max="100" step="0.01" />
+                </div>
+                <div class="invoice-form__field">
+                  <label>Status</label>
+                  <select id="inv-status">
+                    <option value="sent" selected>Sent</option>
+                    <option value="paid">Paid</option>
+                    <option value="overdue">Overdue</option>
+                  </select>
+                </div>
+              </div>
+
+              <label style="display:block;margin:1rem 0 0.5rem;font-weight:600;font-size:0.85rem;color:var(--text-secondary);">Line Items</label>
+              <div id="inv-items">
+                <div class="inv-item-row">
+                  <input type="text" class="inv-item-desc" placeholder="Description" required />
+                  <input type="number" class="inv-item-qty" placeholder="Qty" value="1" min="0" step="0.01" required />
+                  <input type="number" class="inv-item-rate" placeholder="Rate" min="0" step="0.01" required />
+                  <span class="inv-item-amount">0.00</span>
+                  <button type="button" class="inv-item-remove btn-icon" title="Remove">×</button>
+                </div>
+              </div>
+              <button type="button" id="inv-add-item" class="btn-icon" style="margin-top:0.5rem;">+ Add Item</button>
+
+              <div class="invoice-form__field" style="margin-top:1rem;">
+                <label>Notes</label>
+                <textarea id="inv-notes" rows="2" placeholder="Payment terms, bank details, etc."></textarea>
+              </div>
+
+              <div class="invoice-form__totals">
+                <div class="invoice-form__total-row">
+                  <span>Subtotal</span>
+                  <strong id="inv-subtotal">0.00</strong>
+                </div>
+                <div class="invoice-form__total-row">
+                  <span>Tax</span>
+                  <strong id="inv-tax">0.00</strong>
+                </div>
+                <div class="invoice-form__total-row invoice-form__total-row--grand">
+                  <span>Total</span>
+                  <strong id="inv-total">0.00</strong>
+                </div>
+              </div>
+
+              <div class="invoice-form__actions">
+                <button type="submit" id="inv-submit" class="ai-chat__send">Create Invoice</button>
+                <span id="inv-msg" style="margin-left:1rem;font-size:0.85rem;color:var(--green);"></span>
+              </div>
+            </form>
+          </div>
+        </div>
+
+        <!-- Invoice List -->
+        <div class="panel">
+          <div class="panel__header">
+            <div>
+              <h2 class="panel__title">All Invoices</h2>
+              <p class="panel__subtitle">Manage and track invoice status</p>
+            </div>
+            <input type="text" id="inv-search" class="search-input" placeholder="Search by client, ID, or amount..." />
+          </div>
+          <div class="table-wrap">
+            <table class="data-table" id="invoices-table">
+              <thead>
+                <tr>
+                  <th data-sort="id">Invoice # ↕</th>
+                  <th data-sort="clientName">Client ↕</th>
+                  <th data-sort="issueDate">Issue Date ↕</th>
+                  <th data-sort="total">Total ↕</th>
+                  <th>Status</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="invoices-body">
+                <tr><td colspan="6" class="loading-cell">Loading invoices...</td></tr>
+              </tbody>
+            </table>
           </div>
         </div>
       </section>

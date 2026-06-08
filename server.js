@@ -67,6 +67,48 @@ function saveLead(lead) {
   fs.writeFileSync(LEADS_FILE, JSON.stringify(leads, null, 2));
 }
 
+// ── Invoice persistence ─────────────────────────────────────────────────────
+const INVOICES_FILE = path.join(__dirname, 'data', 'invoices.json');
+const MAX_INVOICES = 1000;
+
+function loadInvoices() {
+  ensureDataDir();
+  if (!fs.existsSync(INVOICES_FILE)) return [];
+  try {
+    return JSON.parse(fs.readFileSync(INVOICES_FILE, 'utf8'));
+  } catch { return []; }
+}
+
+function saveInvoice(invoice) {
+  ensureDataDir();
+  const invoices = loadInvoices();
+  invoices.unshift({ ...invoice, createdAt: new Date().toISOString() });
+  if (invoices.length > MAX_INVOICES) invoices.length = MAX_INVOICES;
+  fs.writeFileSync(INVOICES_FILE, JSON.stringify(invoices, null, 2));
+}
+
+function updateInvoiceStatus(id, status) {
+  ensureDataDir();
+  const invoices = loadInvoices();
+  const idx = invoices.findIndex(i => i.id === id);
+  if (idx === -1) return false;
+  invoices[idx].status = status;
+  if (status === 'paid' && !invoices[idx].paidAt) {
+    invoices[idx].paidAt = new Date().toISOString();
+  }
+  fs.writeFileSync(INVOICES_FILE, JSON.stringify(invoices, null, 2));
+  return true;
+}
+
+function deleteInvoice(id) {
+  ensureDataDir();
+  const invoices = loadInvoices();
+  const filtered = invoices.filter(i => i.id !== id);
+  if (filtered.length === invoices.length) return false;
+  fs.writeFileSync(INVOICES_FILE, JSON.stringify(filtered, null, 2));
+  return true;
+}
+
 // ── Auth helpers ────────────────────────────────────────────────────────────
 function requireAdmin(req, res, next) {
   if (req.session && req.session.isAdmin) return next();
@@ -101,6 +143,93 @@ app.get('/admin', requireAdmin, (req, res) => {
 // ── Admin API: leads ──────────────────────────────────────────────────────────
 app.get('/admin/api/leads', requireAdmin, (req, res) => {
   res.json(loadLeads());
+});
+
+// ── Admin API: invoices ───────────────────────────────────────────────────────
+app.get('/admin/api/invoices', requireAdmin, (req, res) => {
+  res.json(loadInvoices());
+});
+
+app.post('/admin/api/invoices', requireAdmin, (req, res) => {
+  const { clientName, clientEmail, items, taxRate, status, issueDate, dueDate, notes } = req.body;
+  if (!clientName || !items || !items.length) {
+    return res.status(400).json({ error: 'Missing required fields.' });
+  }
+
+  const subtotal = items.reduce((s, item) => s + (parseFloat(item.quantity || 0) * parseFloat(item.rate || 0)), 0);
+  const tax = parseFloat(taxRate || 0);
+  const taxAmount = subtotal * (tax / 100);
+  const total = subtotal + taxAmount;
+
+  const now = new Date();
+  const id = `inv-${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}${String(now.getDate()).padStart(2, '0')}-${String(now.getTime()).slice(-3)}`;
+
+  const invoice = {
+    id,
+    clientName: String(clientName).trim(),
+    clientEmail: String(clientEmail || '').trim(),
+    items: items.map(it => ({
+      description: String(it.description || ''),
+      quantity: parseFloat(it.quantity || 0),
+      rate: parseFloat(it.rate || 0),
+      amount: parseFloat(it.quantity || 0) * parseFloat(it.rate || 0),
+    })),
+    subtotal: parseFloat(subtotal.toFixed(2)),
+    taxRate: tax,
+    taxAmount: parseFloat(taxAmount.toFixed(2)),
+    total: parseFloat(total.toFixed(2)),
+    status: status || 'sent',
+    issueDate: issueDate || now.toISOString().split('T')[0],
+    dueDate: dueDate || now.toISOString().split('T')[0],
+    notes: String(notes || '').trim(),
+  };
+
+  saveInvoice(invoice);
+  res.json({ success: true, invoice });
+});
+
+app.patch('/admin/api/invoices/:id', requireAdmin, (req, res) => {
+  const { status } = req.body;
+  if (!status) return res.status(400).json({ error: 'Missing status.' });
+  const ok = updateInvoiceStatus(req.params.id, status);
+  if (!ok) return res.status(404).json({ error: 'Invoice not found.' });
+  res.json({ success: true });
+});
+
+app.delete('/admin/api/invoices/:id', requireAdmin, (req, res) => {
+  const ok = deleteInvoice(req.params.id);
+  if (!ok) return res.status(404).json({ error: 'Invoice not found.' });
+  res.json({ success: true });
+});
+
+app.get('/admin/api/sales-summary', requireAdmin, (req, res) => {
+  const invoices = loadInvoices();
+  const months = {};
+
+  invoices.forEach(inv => {
+    const month = inv.issueDate?.slice(0, 7) || inv.createdAt?.slice(0, 7);
+    if (!month) return;
+    if (!months[month]) {
+      months[month] = { month, revenue: 0, paid: 0, unpaid: 0, count: 0 };
+    }
+    months[month].revenue += inv.total || 0;
+    months[month].count += 1;
+    if (inv.status === 'paid') {
+      months[month].paid += inv.total || 0;
+    } else {
+      months[month].unpaid += inv.total || 0;
+    }
+  });
+
+  const summary = Object.values(months).sort((a, b) => a.month.localeCompare(b.month));
+  const totals = {
+    totalRevenue: invoices.reduce((s, i) => s + (i.total || 0), 0),
+    totalPaid: invoices.filter(i => i.status === 'paid').reduce((s, i) => s + (i.total || 0), 0),
+    totalUnpaid: invoices.filter(i => i.status !== 'paid').reduce((s, i) => s + (i.total || 0), 0),
+    totalInvoices: invoices.length,
+  };
+
+  res.json({ summary, totals });
 });
 
 // ── Google API helpers ──────────────────────────────────────────────────────

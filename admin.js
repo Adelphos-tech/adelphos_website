@@ -25,6 +25,7 @@
     analytics: 'Google Analytics',
     funnel: 'Conversion Funnel',
     'ai-analyst': 'AI Business Analyst',
+    invoices: 'Invoices & Sales',
   };
 
   sidebarLinks.forEach(link => {
@@ -92,7 +93,7 @@
   async function loadAll() {
     btnRefresh.disabled = true;
     btnRefresh.textContent = '...';
-    await Promise.all([loadLeads(), loadSearchConsole(), loadAnalytics(), loadFunnel()]);
+    await Promise.all([loadLeads(), loadSearchConsole(), loadAnalytics(), loadFunnel(), loadInvoices()]);
     btnRefresh.disabled = false;
     btnRefresh.textContent = '↻';
   }
@@ -745,6 +746,299 @@
     aiInsightsBody.innerHTML = `<div class="ai-insights__content">${answer}</div>`;
     aiInsightsBtn.disabled = false;
   });
+
+  // ── Invoices ────────────────────────────────────────────────────────────────
+  let allInvoices = [];
+  let invoiceSort = { col: 'issueDate', asc: false };
+  const invSearch = document.getElementById('inv-search');
+  const invBody = document.getElementById('invoices-body');
+
+  async function loadInvoices() {
+    try {
+      const [invRes, sumRes] = await Promise.all([
+        fetch('/admin/api/invoices'),
+        fetch('/admin/api/sales-summary'),
+      ]);
+      if (!invRes.ok) throw new Error('Unauthorized');
+      allInvoices = await invRes.json();
+      const salesData = await sumRes.json();
+      filterAndRenderInvoices();
+      updateInvoiceCards(salesData.totals);
+      renderSalesChart(salesData.summary);
+    } catch (err) {
+      invBody.innerHTML = `<tr><td colspan="6" class="loading-cell">${err.message}</td></tr>`;
+    }
+  }
+
+  function updateInvoiceCards(totals) {
+    document.getElementById('inv-card-revenue').textContent = fmtCurrency(totals?.totalRevenue);
+    document.getElementById('inv-card-count').textContent = fmtNum(totals?.totalInvoices);
+    document.getElementById('inv-card-unpaid').textContent = fmtCurrency(totals?.totalUnpaid);
+
+    const now = new Date();
+    const thisMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+    const monthRevenue = allInvoices
+      .filter(i => (i.issueDate || i.createdAt)?.slice(0, 7) === thisMonth)
+      .reduce((s, i) => s + (i.total || 0), 0);
+    document.getElementById('inv-card-month').textContent = fmtCurrency(monthRevenue);
+  }
+
+  const salesChartInstances = {};
+  function renderSalesChart(summary) {
+    const ctx = document.getElementById('sales-chart')?.getContext('2d');
+    if (!ctx) return;
+    if (salesChartInstances['sales-chart']) salesChartInstances['sales-chart'].destroy();
+    if (!summary?.length) return;
+
+    salesChartInstances['sales-chart'] = new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels: summary.map(s => {
+          const [y, m] = s.month.split('-');
+          return `${m}/${y}`;
+        }),
+        datasets: [
+          {
+            label: 'Revenue',
+            data: summary.map(s => s.revenue),
+            backgroundColor: 'rgba(15, 118, 110, 0.5)',
+            borderColor: 'rgba(15, 118, 110, 1)',
+            borderWidth: 1,
+            borderRadius: 4,
+          },
+          {
+            label: 'Paid',
+            data: summary.map(s => s.paid),
+            backgroundColor: 'rgba(22, 163, 74, 0.5)',
+            borderColor: 'rgba(22, 163, 74, 1)',
+            borderWidth: 1,
+            borderRadius: 4,
+          },
+        ],
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { labels: { color: '#64748b' } },
+          tooltip: {
+            backgroundColor: '#1e293b',
+            titleColor: '#f8fafc',
+            bodyColor: '#f8fafc',
+            padding: 10,
+            cornerRadius: 6,
+            callbacks: {
+              label: (ctx) => `${ctx.dataset.label}: ${fmtCurrency(ctx.raw)}`,
+            },
+          },
+        },
+        scales: {
+          x: { ticks: { color: '#64748b' }, grid: { color: 'rgba(0,0,0,.05)' } },
+          y: { ticks: { color: '#64748b', callback: v => '₹' + v.toLocaleString('en-IN') }, grid: { color: 'rgba(0,0,0,.05)' }, beginAtZero: true },
+        },
+      },
+    });
+  }
+
+  function fmtCurrency(n) {
+    if (n == null || n === '') return '—';
+    const num = parseFloat(n);
+    if (isNaN(num)) return n;
+    return '₹' + num.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  }
+
+  function filterAndRenderInvoices() {
+    const q = (invSearch.value || '').toLowerCase();
+    let rows = allInvoices.filter(i => {
+      if (!q) return true;
+      const hay = [i.id, i.clientName, i.clientEmail, String(i.total), i.status].join(' ').toLowerCase();
+      return hay.includes(q);
+    });
+
+    rows.sort((a, b) => {
+      let av = a[invoiceSort.col] || '';
+      let bv = b[invoiceSort.col] || '';
+      if (invoiceSort.col === 'issueDate' || invoiceSort.col === 'total') {
+        av = parseFloat(av) || new Date(av).getTime();
+        bv = parseFloat(bv) || new Date(bv).getTime();
+      } else {
+        av = String(av).toLowerCase();
+        bv = String(bv).toLowerCase();
+      }
+      if (av < bv) return invoiceSort.asc ? -1 : 1;
+      if (av > bv) return invoiceSort.asc ? 1 : -1;
+      return 0;
+    });
+
+    if (!rows.length) {
+      invBody.innerHTML = '<tr><td colspan="6" class="loading-cell">No invoices found.</td></tr>';
+      return;
+    }
+    invBody.innerHTML = rows.map(i => {
+      const statusClass = `inv-status inv-status--${i.status}`;
+      return `
+        <tr>
+          <td><strong>${escapeHtml(i.id)}</strong></td>
+          <td>${escapeHtml(i.clientName)}<br><span style="font-size:0.75rem;color:var(--text-muted)">${escapeHtml(i.clientEmail || '')}</span></td>
+          <td>${escapeHtml(i.issueDate)}</td>
+          <td><strong>${fmtCurrency(i.total)}</strong></td>
+          <td><span class="${statusClass}">${escapeHtml(i.status)}</span></td>
+          <td>
+            ${i.status !== 'paid' ? `<button class="btn-icon" title="Mark Paid" onclick="markInvoicePaid('${escapeHtml(i.id)}')">✓</button>` : ''}
+            <button class="btn-icon" title="Delete" onclick="deleteInvoice('${escapeHtml(i.id)}')">🗑</button>
+          </td>
+        </tr>
+      `;
+    }).join('');
+  }
+
+  document.querySelectorAll('#invoices-table th[data-sort]').forEach(th => {
+    th.addEventListener('click', () => {
+      const col = th.dataset.sort;
+      if (invoiceSort.col === col) invoiceSort.asc = !invoiceSort.asc;
+      else { invoiceSort.col = col; invoiceSort.asc = true; }
+      filterAndRenderInvoices();
+    });
+  });
+
+  invSearch.addEventListener('input', filterAndRenderInvoices);
+
+  // Invoice form handling
+  const invForm = document.getElementById('invoice-form');
+  const invItemsContainer = document.getElementById('inv-items');
+  const invAddItemBtn = document.getElementById('inv-add-item');
+  const invTaxRateInput = document.getElementById('inv-tax-rate');
+
+  function calculateInvoiceTotals() {
+    let subtotal = 0;
+    invItemsContainer.querySelectorAll('.inv-item-row').forEach(row => {
+      const qty = parseFloat(row.querySelector('.inv-item-qty').value) || 0;
+      const rate = parseFloat(row.querySelector('.inv-item-rate').value) || 0;
+      const amount = qty * rate;
+      row.querySelector('.inv-item-amount').textContent = amount.toFixed(2);
+      subtotal += amount;
+    });
+    const taxRate = parseFloat(invTaxRateInput.value) || 0;
+    const tax = subtotal * (taxRate / 100);
+    const total = subtotal + tax;
+    document.getElementById('inv-subtotal').textContent = subtotal.toFixed(2);
+    document.getElementById('inv-tax').textContent = tax.toFixed(2);
+    document.getElementById('inv-total').textContent = total.toFixed(2);
+  }
+
+  function addInvoiceItemRow() {
+    const row = document.createElement('div');
+    row.className = 'inv-item-row';
+    row.innerHTML = `
+      <input type="text" class="inv-item-desc" placeholder="Description" required />
+      <input type="number" class="inv-item-qty" placeholder="Qty" value="1" min="0" step="0.01" required />
+      <input type="number" class="inv-item-rate" placeholder="Rate" min="0" step="0.01" required />
+      <span class="inv-item-amount">0.00</span>
+      <button type="button" class="inv-item-remove btn-icon" title="Remove">×</button>
+    `;
+    invItemsContainer.appendChild(row);
+    bindInvoiceItemRow(row);
+  }
+
+  function bindInvoiceItemRow(row) {
+    row.querySelector('.inv-item-qty').addEventListener('input', calculateInvoiceTotals);
+    row.querySelector('.inv-item-rate').addEventListener('input', calculateInvoiceTotals);
+    row.querySelector('.inv-item-remove').addEventListener('click', () => {
+      if (invItemsContainer.querySelectorAll('.inv-item-row').length > 1) {
+        row.remove();
+        calculateInvoiceTotals();
+      }
+    });
+  }
+
+  invItemsContainer.querySelectorAll('.inv-item-row').forEach(bindInvoiceItemRow);
+  invAddItemBtn.addEventListener('click', addInvoiceItemRow);
+  invTaxRateInput.addEventListener('input', calculateInvoiceTotals);
+
+  // Set default dates
+  const today = new Date().toISOString().split('T')[0];
+  document.getElementById('inv-issue-date').value = today;
+  const nextWeek = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+  document.getElementById('inv-due-date').value = nextWeek;
+
+  invForm.addEventListener('submit', async e => {
+    e.preventDefault();
+    const items = [];
+    invItemsContainer.querySelectorAll('.inv-item-row').forEach(row => {
+      const desc = row.querySelector('.inv-item-desc').value.trim();
+      const qty = row.querySelector('.inv-item-qty').value;
+      const rate = row.querySelector('.inv-item-rate').value;
+      if (desc) items.push({ description: desc, quantity: qty, rate: rate });
+    });
+
+    const payload = {
+      clientName: document.getElementById('inv-client-name').value.trim(),
+      clientEmail: document.getElementById('inv-client-email').value.trim(),
+      issueDate: document.getElementById('inv-issue-date').value,
+      dueDate: document.getElementById('inv-due-date').value,
+      taxRate: document.getElementById('inv-tax-rate').value,
+      status: document.getElementById('inv-status').value,
+      notes: document.getElementById('inv-notes').value.trim(),
+      items,
+    };
+
+    try {
+      const res = await fetch('/admin/api/invoices', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Failed to create invoice');
+
+      document.getElementById('inv-msg').textContent = `Invoice ${data.invoice.id} created successfully!`;
+      invForm.reset();
+      document.getElementById('inv-issue-date').value = today;
+      document.getElementById('inv-due-date').value = nextWeek;
+      invItemsContainer.innerHTML = `
+        <div class="inv-item-row">
+          <input type="text" class="inv-item-desc" placeholder="Description" required />
+          <input type="number" class="inv-item-qty" placeholder="Qty" value="1" min="0" step="0.01" required />
+          <input type="number" class="inv-item-rate" placeholder="Rate" min="0" step="0.01" required />
+          <span class="inv-item-amount">0.00</span>
+          <button type="button" class="inv-item-remove btn-icon" title="Remove">×</button>
+        </div>
+      `;
+      invItemsContainer.querySelectorAll('.inv-item-row').forEach(bindInvoiceItemRow);
+      calculateInvoiceTotals();
+      setTimeout(() => { document.getElementById('inv-msg').textContent = ''; }, 3000);
+      loadInvoices();
+    } catch (err) {
+      document.getElementById('inv-msg').textContent = 'Error: ' + err.message;
+      document.getElementById('inv-msg').style.color = 'var(--red)';
+    }
+  });
+
+  window.markInvoicePaid = async function(id) {
+    if (!confirm('Mark this invoice as paid?')) return;
+    try {
+      const res = await fetch(`/admin/api/invoices/${encodeURIComponent(id)}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: 'paid' }),
+      });
+      if (!res.ok) throw new Error('Failed to update');
+      loadInvoices();
+    } catch (err) {
+      alert(err.message);
+    }
+  };
+
+  window.deleteInvoice = async function(id) {
+    if (!confirm('Delete this invoice? This cannot be undone.')) return;
+    try {
+      const res = await fetch(`/admin/api/invoices/${encodeURIComponent(id)}`, { method: 'DELETE' });
+      if (!res.ok) throw new Error('Failed to delete');
+      loadInvoices();
+    } catch (err) {
+      alert(err.message);
+    }
+  };
 
   // ── Utils ──────────────────────────────────────────────────────────────────
   function escapeHtml(str) {
