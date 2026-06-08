@@ -612,11 +612,23 @@ body {
   flex: 1;
 }
 
-.ai-message__content p { margin-bottom: 0.5rem; }
+.ai-message__content p { margin-bottom: 0.6rem; line-height: 1.7; }
 .ai-message__content p:last-child { margin-bottom: 0; }
 .ai-message__content ul { margin: 0.5rem 0 0.5rem 1.25rem; }
-.ai-message__content li { margin-bottom: 0.25rem; }
-.ai-message__content strong { color: var(--accent); }
+.ai-message__content li { margin-bottom: 0.35rem; line-height: 1.6; }
+.ai-message__content strong,
+.ai-message__content b { color: var(--accent); font-weight: 700; }
+.ai-message__content ol { margin: 0.5rem 0 0.5rem 1.5rem; }
+.ai-message__content ol li { margin-bottom: 0.4rem; }
+.ai-message__content h3,
+.ai-message__content h4 {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--text);
+  margin: 1rem 0 0.5rem;
+}
+.ai-message__content h3:first-child,
+.ai-message__content h4:first-child { margin-top: 0; }
 
 .ai-chat__input-row {
   display: flex;
