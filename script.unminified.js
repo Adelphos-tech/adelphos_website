@@ -111,13 +111,12 @@
     // ── Frame sequence scrub ──
     gsap.to(frameState, {
       currentIndex: CONFIG.frameCount - 1,
-      snap: 'currentIndex',
       ease: 'none',
       scrollTrigger: {
         trigger: '#scroll-container',
         start: 'top top',
         end: 'bottom bottom',
-        scrub: 1.5,
+        scrub: 0.1,
         onUpdate: () => {
           if (!rafPending) {
             rafPending = true;

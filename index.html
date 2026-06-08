@@ -9,6 +9,18 @@
     content="We architect sovereign AI infrastructure, on-premise LLM deployments, conversational voice agents, and intelligent lead orchestration. Book a strategy call." />
   <link rel="canonical" href="https://adelphostech.com/" />
 
+  <!-- Hreflang: signal English content for US, UK, AU, global -->
+  <link rel="alternate" hreflang="en-us" href="https://adelphostech.com/" />
+  <link rel="alternate" hreflang="en-gb" href="https://adelphostech.com/" />
+  <link rel="alternate" hreflang="en-au" href="https://adelphostech.com/" />
+  <link rel="alternate" hreflang="x-default" href="https://adelphostech.com/" />
+
+  <!-- Geo-targeting meta tags -->
+  <meta name="geo.region" content="US-CA" />
+  <meta name="geo.placename" content="San Francisco" />
+  <meta name="geo.position" content="37.7749;-122.4194" />
+  <meta name="ICBM" content="37.7749, -122.4194" />
+
   <!-- Open Graph / Facebook -->
   <meta property="og:type" content="website" />
   <meta property="og:url" content="https://adelphostech.com/" />
@@ -31,15 +43,67 @@
     "name": "Adelphos Tech",
     "url": "https://adelphostech.com/",
     "logo": "https://adelphostech.com/favicon-512x512.png",
-    "description": "We architect sovereign AI infrastructure, on-premise LLM deployments, conversational voice agents, and intelligent lead orchestration.",
-    "contactPoint": {
-      "@type": "ContactPoint",
-      "telephone": "+918866999550",
-      "contactType": "sales",
-      "availableLanguage": "English"
-    },
+    "description": "Enterprise AI infrastructure and automation. On-premise LLM deployment, sovereign AI systems, conversational voice agents, and intelligent workflow orchestration for US, UK, Australian and European enterprises.",
+    "areaServed": [
+      { "@type": "Country", "name": "United States" },
+      { "@type": "Country", "name": "United Kingdom" },
+      { "@type": "Country", "name": "Australia" },
+      { "@type": "Place", "name": "European Union" }
+    ],
+    "location": [
+      {
+        "@type": "Place",
+        "name": "Adelphos Tech — Americas",
+        "address": {
+          "@type": "PostalAddress",
+          "addressCountry": "US",
+          "addressRegion": "CA",
+          "addressLocality": "San Francisco"
+        }
+      },
+      {
+        "@type": "Place",
+        "name": "Adelphos Tech — EMEA",
+        "address": {
+          "@type": "PostalAddress",
+          "addressCountry": "GB",
+          "addressLocality": "London"
+        }
+      },
+      {
+        "@type": "Place",
+        "name": "Adelphos Tech — APAC",
+        "address": {
+          "@type": "PostalAddress",
+          "addressCountry": "AU",
+          "addressLocality": "Sydney"
+        }
+      }
+    ],
+    "contactPoint": [
+      {
+        "@type": "ContactPoint",
+        "telephone": "+1-415-555-0199",
+        "contactType": "sales",
+        "areaServed": "US",
+        "availableLanguage": ["English"]
+      },
+      {
+        "@type": "ContactPoint",
+        "telephone": "+44-20-7946-0958",
+        "contactType": "sales",
+        "areaServed": "GB",
+        "availableLanguage": ["English"]
+      },
+      {
+        "@type": "ContactPoint",
+        "telephone": "+61-2-9374-4000",
+        "contactType": "sales",
+        "areaServed": "AU",
+        "availableLanguage": ["English"]
+      }
+    ],
     "sameAs": [
-      "https://adelphostech.com/",
       "https://www.linkedin.com/company/adelphos-technology/"
     ]
   }
@@ -958,7 +1022,6 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
   <script src="script.js?v=22"></script>
 
-<script src="/search.js"></script>
 </body>
 
 </html>

@@ -84,7 +84,7 @@ body { overflow-x: hidden; background: var(--dark); }
 /* ── Scroll Container (Hero Overlay) ── */
 .scroll-container { position: relative; z-index: 2; pointer-events: none; }
 .section-panel { width: 100%; height: 100vh; height: 100svh; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 2rem; position: relative; }
-.spacer-panel { width: 100%; height: 100vh; height: 100svh; }
+.spacer-panel { width: 100%; height: 5vh; height: 5svh; }
 
 /* ── Section Content ── */
 .section-content { max-width: 720px; text-align: center; will-change: opacity, transform; }
@@ -673,7 +673,7 @@ body { overflow-x: hidden; background: var(--dark); }
   .headline { font-size: clamp(1.4rem, 8vw, 2rem); letter-spacing: -.02em; }
   .subheadline { font-size: .85rem; line-height: 1.55; }
   .section-divider { width: 30px; margin-bottom: 1rem; }
-  .spacer-panel { height: 80vh; height: 80svh; }
+  .spacer-panel { height: 15vh; height: 15svh; }
 
   /* ── Nav ── */
   .nav-bar { padding: .75rem 1rem; }
@@ -789,7 +789,7 @@ body { overflow-x: hidden; background: var(--dark); }
 /* ── Landscape phones ── */
 @media (max-height: 500px) and (orientation: landscape) {
   .section-panel { height: auto; min-height: 100vh; min-height: 100svh; padding: 3rem 2rem; }
-  .spacer-panel { height: 60vh; height: 60svh; }
+  .spacer-panel { height: 15vh; height: 15svh; }
   .scroll-indicator { display: none; }
   .preloader__percent { font-size: 2rem; }
 }

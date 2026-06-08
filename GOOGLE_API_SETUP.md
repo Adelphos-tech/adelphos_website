@@ -13,25 +13,7 @@ This guide walks you through connecting your admin dashboard to **Google Search 
 
 ---
 
-## Step 2: Enable the APIs
-
-1. In your new project, go to **APIs & Services → Library**
-2. Search for and enable these two APIs:
-   - **Google Search Console API**
-   - **Google Analytics Data API**
-
----
-
-## Step 3: Create a Service Account
-
-1. Go to **APIs & Services → Credentials**
-2. Click **Create Credentials → Service Account**
-3. Name it `adelphos-admin`
-4. Click **Create and Continue**, then **Done**
-5. Click on the service account you just created
-6. Go to the **Keys** tab → **Add Key → Create New Key**
-7. Select **JSON** and click **Create**
-8. A `.json` file will download — **save it securely**
+![alt text](image.png)
 
 ---
 

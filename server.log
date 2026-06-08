@@ -1,0 +1,28 @@
+
+  ✦ Adelphos server running
+  ✦ Website:  http://localhost:3000
+  ✦ Admin:    http://localhost:3000/admin
+  ✦ Local IP: http://0.0.0.0:3000
+
+node:fs:441
+    return binding.readFileUtf8(path, stringToFlags(options.flag));
+                   ^
+
+Error: ENOENT: no such file or directory, open '/Users/shivang/Desktop/v/client_secret_939403255437-hm657psouddtdripir3f6lt8l51s0aqh.apps.googleusercontent.com.json'
+    at Object.readFileSync (node:fs:441:20)
+    at getScOAuthClient (/Users/shivang/Desktop/v/server.js:127:29)
+    at /Users/shivang/Desktop/v/server.js:183:20
+    at Layer.handle [as handle_request] (/Users/shivang/Desktop/v/node_modules/express/lib/router/layer.js:95:5)
+    at next (/Users/shivang/Desktop/v/node_modules/express/lib/router/route.js:149:13)
+    at requireAdmin (/Users/shivang/Desktop/v/server.js:72:50)
+    at Layer.handle [as handle_request] (/Users/shivang/Desktop/v/node_modules/express/lib/router/layer.js:95:5)
+    at next (/Users/shivang/Desktop/v/node_modules/express/lib/router/route.js:149:13)
+    at Route.dispatch (/Users/shivang/Desktop/v/node_modules/express/lib/router/route.js:119:3)
+    at Layer.handle [as handle_request] (/Users/shivang/Desktop/v/node_modules/express/lib/router/layer.js:95:5) {
+  errno: -2,
+  code: 'ENOENT',
+  syscall: 'open',
+  path: '/Users/shivang/Desktop/v/client_secret_939403255437-hm657psouddtdripir3f6lt8l51s0aqh.apps.googleusercontent.com.json'
+}
+
+Node.js v22.18.0
