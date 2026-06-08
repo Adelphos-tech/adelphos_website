@@ -556,72 +556,97 @@
           </div>
           <div class="table-wrap">
             <form id="invoice-form" class="invoice-form">
-              <div class="invoice-form__grid">
-                <div class="invoice-form__field">
-                  <label>Client Name *</label>
-                  <input type="text" id="inv-client-name" required placeholder="Acme Corp" />
-                </div>
-                <div class="invoice-form__field">
-                  <label>Client Email</label>
-                  <input type="email" id="inv-client-email" placeholder="billing@acme.com" />
-                </div>
-                <div class="invoice-form__field">
-                  <label>Issue Date</label>
-                  <input type="date" id="inv-issue-date" />
-                </div>
-                <div class="invoice-form__field">
-                  <label>Due Date</label>
-                  <input type="date" id="inv-due-date" />
-                </div>
-                <div class="invoice-form__field">
-                  <label>Tax Rate (%)</label>
-                  <input type="number" id="inv-tax-rate" value="18" min="0" max="100" step="0.01" />
-                </div>
-                <div class="invoice-form__field">
-                  <label>Status</label>
-                  <select id="inv-status">
-                    <option value="sent" selected>Sent</option>
-                    <option value="paid">Paid</option>
-                    <option value="overdue">Overdue</option>
-                  </select>
+              <div class="invoice-form__section">
+                <div class="invoice-form__section-title">Client Details</div>
+                <div class="invoice-form__grid">
+                  <div class="invoice-form__field">
+                    <label>Client Name *</label>
+                    <input type="text" id="inv-client-name" required placeholder="e.g. Acme Corporation" />
+                  </div>
+                  <div class="invoice-form__field">
+                    <label>Client Email</label>
+                    <input type="email" id="inv-client-email" placeholder="billing@example.com" />
+                  </div>
                 </div>
               </div>
 
-              <label style="display:block;margin:1rem 0 0.5rem;font-weight:600;font-size:0.85rem;color:var(--text-secondary);">Line Items</label>
-              <div id="inv-items">
-                <div class="inv-item-row">
-                  <input type="text" class="inv-item-desc" placeholder="Description" required />
-                  <input type="number" class="inv-item-qty" placeholder="Qty" value="1" min="0" step="0.01" required />
-                  <input type="number" class="inv-item-rate" placeholder="Rate" min="0" step="0.01" required />
-                  <span class="inv-item-amount">0.00</span>
-                  <button type="button" class="inv-item-remove btn-icon" title="Remove">×</button>
-                </div>
-              </div>
-              <button type="button" id="inv-add-item" class="btn-icon" style="margin-top:0.5rem;">+ Add Item</button>
-
-              <div class="invoice-form__field" style="margin-top:1rem;">
-                <label>Notes</label>
-                <textarea id="inv-notes" rows="2" placeholder="Payment terms, bank details, etc."></textarea>
-              </div>
-
-              <div class="invoice-form__totals">
-                <div class="invoice-form__total-row">
-                  <span>Subtotal</span>
-                  <strong id="inv-subtotal">0.00</strong>
-                </div>
-                <div class="invoice-form__total-row">
-                  <span>Tax</span>
-                  <strong id="inv-tax">0.00</strong>
-                </div>
-                <div class="invoice-form__total-row invoice-form__total-row--grand">
-                  <span>Total</span>
-                  <strong id="inv-total">0.00</strong>
+              <div class="invoice-form__section">
+                <div class="invoice-form__section-title">Invoice Details</div>
+                <div class="invoice-form__grid invoice-form__grid--3">
+                  <div class="invoice-form__field">
+                    <label>Issue Date</label>
+                    <input type="date" id="inv-issue-date" />
+                  </div>
+                  <div class="invoice-form__field">
+                    <label>Due Date</label>
+                    <input type="date" id="inv-due-date" />
+                  </div>
+                  <div class="invoice-form__field">
+                    <label>Status</label>
+                    <select id="inv-status">
+                      <option value="sent" selected>Sent</option>
+                      <option value="paid">Paid</option>
+                      <option value="overdue">Overdue</option>
+                    </select>
+                  </div>
                 </div>
               </div>
 
-              <div class="invoice-form__actions">
-                <button type="submit" id="inv-submit" class="ai-chat__send">Create Invoice</button>
-                <span id="inv-msg" style="margin-left:1rem;font-size:0.85rem;color:var(--green);"></span>
+              <div class="invoice-form__section">
+                <div class="invoice-form__section-title">Line Items</div>
+                <div class="inv-items-header">
+                  <span>Description</span>
+                  <span>Quantity</span>
+                  <span>Rate (₹)</span>
+                  <span>Amount (₹)</span>
+                  <span></span>
+                </div>
+                <div id="inv-items">
+                  <div class="inv-item-row">
+                    <input type="text" class="inv-item-desc" placeholder="Service / product description" required />
+                    <input type="number" class="inv-item-qty" placeholder="1" value="1" min="0" step="0.01" required />
+                    <input type="number" class="inv-item-rate" placeholder="0.00" min="0" step="0.01" required />
+                    <span class="inv-item-amount">0.00</span>
+                    <button type="button" class="inv-item-remove btn-icon" title="Remove"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M4 4l6 6M10 4l-6 6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg></button>
+                  </div>
+                </div>
+                <button type="button" id="inv-add-item" class="inv-add-btn"><span class="inv-add-btn__icon">+</span> Add Line Item</button>
+              </div>
+
+              <div class="invoice-form__section">
+                <div class="invoice-form__section-title">Additional Info</div>
+                <div class="invoice-form__grid">
+                  <div class="invoice-form__field">
+                    <label>Tax Rate (%)</label>
+                    <input type="number" id="inv-tax-rate" value="18" min="0" max="100" step="0.01" />
+                  </div>
+                  <div class="invoice-form__field invoice-form__field--wide">
+                    <label>Notes</label>
+                    <textarea id="inv-notes" rows="2" placeholder="Payment terms, bank details, or any additional information..."></textarea>
+                  </div>
+                </div>
+              </div>
+
+              <div class="invoice-form__footer">
+                <div class="invoice-form__totals">
+                  <div class="invoice-form__total-row">
+                    <span>Subtotal</span>
+                    <strong id="inv-subtotal">₹ 0.00</strong>
+                  </div>
+                  <div class="invoice-form__total-row">
+                    <span>Tax</span>
+                    <strong id="inv-tax">₹ 0.00</strong>
+                  </div>
+                  <div class="invoice-form__total-row invoice-form__total-row--grand">
+                    <span>Total</span>
+                    <strong id="inv-total">₹ 0.00</strong>
+                  </div>
+                </div>
+
+                <div class="invoice-form__actions">
+                  <button type="submit" id="inv-submit" class="btn-primary">Create Invoice</button>
+                  <span id="inv-msg" class="inv-msg"></span>
+                </div>
               </div>
             </form>
           </div>
@@ -637,21 +662,35 @@
             <input type="text" id="inv-search" class="search-input" placeholder="Search by client, ID, or amount..." />
           </div>
           <div class="table-wrap">
-            <table class="data-table" id="invoices-table">
+            <table class="data-table data-table--invoices" id="invoices-table">
               <thead>
                 <tr>
-                  <th data-sort="id">Invoice # ↕</th>
-                  <th data-sort="clientName">Client ↕</th>
-                  <th data-sort="issueDate">Issue Date ↕</th>
-                  <th data-sort="total">Total ↕</th>
+                  <th data-sort="id">Invoice #</th>
+                  <th data-sort="clientName">Client</th>
+                  <th data-sort="issueDate">Date</th>
+                  <th data-sort="total">Amount</th>
                   <th>Status</th>
-                  <th>Actions</th>
+                  <th class="th-actions">Actions</th>
                 </tr>
               </thead>
               <tbody id="invoices-body">
                 <tr><td colspan="6" class="loading-cell">Loading invoices...</td></tr>
               </tbody>
             </table>
+          </div>
+        </div>
+
+        <!-- Invoice Preview Modal -->
+        <div id="inv-preview-overlay" class="inv-preview-overlay">
+          <div class="inv-preview-modal">
+            <div class="inv-preview-header">
+              <h3>Invoice Preview</h3>
+              <button id="inv-preview-close" class="btn-icon"><svg width="16" height="16" viewBox="0 0 16 16"><path d="M4 4l8 8M12 4l-8 8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg></button>
+            </div>
+            <div id="inv-preview-body" class="inv-preview-body"></div>
+            <div class="inv-preview-actions">
+              <button id="inv-preview-print" class="btn-primary">Print / Save PDF</button>
+            </div>
           </div>
         </div>
       </section>

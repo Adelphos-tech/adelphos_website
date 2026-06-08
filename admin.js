@@ -879,13 +879,17 @@
       return `
         <tr>
           <td><strong>${escapeHtml(i.id)}</strong></td>
-          <td>${escapeHtml(i.clientName)}<br><span style="font-size:0.75rem;color:var(--text-muted)">${escapeHtml(i.clientEmail || '')}</span></td>
+          <td>
+            <div style="font-weight:600;">${escapeHtml(i.clientName)}</div>
+            <div style="font-size:0.75rem;color:var(--text-muted);">${escapeHtml(i.clientEmail || '')}</div>
+          </td>
           <td>${escapeHtml(i.issueDate)}</td>
-          <td><strong>${fmtCurrency(i.total)}</strong></td>
+          <td><strong style="font-variant-numeric:tabular-nums;">${fmtCurrency(i.total)}</strong></td>
           <td><span class="${statusClass}">${escapeHtml(i.status)}</span></td>
           <td>
-            ${i.status !== 'paid' ? `<button class="btn-icon" title="Mark Paid" onclick="markInvoicePaid('${escapeHtml(i.id)}')">✓</button>` : ''}
-            <button class="btn-icon" title="Delete" onclick="deleteInvoice('${escapeHtml(i.id)}')">🗑</button>
+            <button class="btn-icon" title="View Invoice" onclick="previewInvoice('${escapeHtml(i.id)}')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button>
+            ${i.status !== 'paid' ? `<button class="btn-icon" title="Mark Paid" onclick="markInvoicePaid('${escapeHtml(i.id)}')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></button>` : ''}
+            <button class="btn-icon" title="Delete" onclick="deleteInvoice('${escapeHtml(i.id)}')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></button>
           </td>
         </tr>
       `;
@@ -921,20 +925,20 @@
     const taxRate = parseFloat(invTaxRateInput.value) || 0;
     const tax = subtotal * (taxRate / 100);
     const total = subtotal + tax;
-    document.getElementById('inv-subtotal').textContent = subtotal.toFixed(2);
-    document.getElementById('inv-tax').textContent = tax.toFixed(2);
-    document.getElementById('inv-total').textContent = total.toFixed(2);
+    document.getElementById('inv-subtotal').textContent = '₹ ' + subtotal.toFixed(2);
+    document.getElementById('inv-tax').textContent = '₹ ' + tax.toFixed(2);
+    document.getElementById('inv-total').textContent = '₹ ' + total.toFixed(2);
   }
 
   function addInvoiceItemRow() {
     const row = document.createElement('div');
     row.className = 'inv-item-row';
     row.innerHTML = `
-      <input type="text" class="inv-item-desc" placeholder="Description" required />
-      <input type="number" class="inv-item-qty" placeholder="Qty" value="1" min="0" step="0.01" required />
-      <input type="number" class="inv-item-rate" placeholder="Rate" min="0" step="0.01" required />
+      <input type="text" class="inv-item-desc" placeholder="Service / product description" required />
+      <input type="number" class="inv-item-qty" placeholder="1" value="1" min="0" step="0.01" required />
+      <input type="number" class="inv-item-rate" placeholder="0.00" min="0" step="0.01" required />
       <span class="inv-item-amount">0.00</span>
-      <button type="button" class="inv-item-remove btn-icon" title="Remove">×</button>
+      <button type="button" class="inv-item-remove btn-icon" title="Remove"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M4 4l6 6M10 4l-6 6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg></button>
     `;
     invItemsContainer.appendChild(row);
     bindInvoiceItemRow(row);
@@ -991,17 +995,19 @@
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Failed to create invoice');
 
-      document.getElementById('inv-msg').textContent = `Invoice ${data.invoice.id} created successfully!`;
+      const msgEl = document.getElementById('inv-msg');
+      msgEl.textContent = `Invoice ${data.invoice.id} created successfully!`;
+      msgEl.className = 'inv-msg';
       invForm.reset();
       document.getElementById('inv-issue-date').value = today;
       document.getElementById('inv-due-date').value = nextWeek;
       invItemsContainer.innerHTML = `
         <div class="inv-item-row">
-          <input type="text" class="inv-item-desc" placeholder="Description" required />
-          <input type="number" class="inv-item-qty" placeholder="Qty" value="1" min="0" step="0.01" required />
-          <input type="number" class="inv-item-rate" placeholder="Rate" min="0" step="0.01" required />
+          <input type="text" class="inv-item-desc" placeholder="Service / product description" required />
+          <input type="number" class="inv-item-qty" placeholder="1" value="1" min="0" step="0.01" required />
+          <input type="number" class="inv-item-rate" placeholder="0.00" min="0" step="0.01" required />
           <span class="inv-item-amount">0.00</span>
-          <button type="button" class="inv-item-remove btn-icon" title="Remove">×</button>
+          <button type="button" class="inv-item-remove btn-icon" title="Remove"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M4 4l6 6M10 4l-6 6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg></button>
         </div>
       `;
       invItemsContainer.querySelectorAll('.inv-item-row').forEach(bindInvoiceItemRow);
@@ -1009,8 +1015,9 @@
       setTimeout(() => { document.getElementById('inv-msg').textContent = ''; }, 3000);
       loadInvoices();
     } catch (err) {
-      document.getElementById('inv-msg').textContent = 'Error: ' + err.message;
-      document.getElementById('inv-msg').style.color = 'var(--red)';
+      const msgEl = document.getElementById('inv-msg');
+      msgEl.textContent = 'Error: ' + err.message;
+      msgEl.className = 'inv-msg inv-msg--error';
     }
   });
 
@@ -1039,6 +1046,87 @@
       alert(err.message);
     }
   };
+
+  // ── Invoice Preview Modal ───────────────────────────────────────────────────
+  const invPreviewOverlay = document.getElementById('inv-preview-overlay');
+  const invPreviewBody = document.getElementById('inv-preview-body');
+  const invPreviewClose = document.getElementById('inv-preview-close');
+  const invPreviewPrint = document.getElementById('inv-preview-print');
+
+  window.previewInvoice = function(id) {
+    const inv = allInvoices.find(i => i.id === id);
+    if (!inv) return;
+
+    const itemsHtml = (inv.items || []).map(it => `
+      <tr>
+        <td>${escapeHtml(it.description)}</td>
+        <td>${it.quantity}</td>
+        <td>₹ ${parseFloat(it.rate).toFixed(2)}</td>
+        <td><strong>₹ ${parseFloat(it.amount).toFixed(2)}</strong></td>
+      </tr>
+    `).join('');
+
+    invPreviewBody.innerHTML = `
+      <div class="inv-print">
+        <div class="inv-print__header">
+          <div class="inv-print__brand">Adelphos Tech</div>
+          <div class="inv-print__meta">
+            <strong>Invoice ${escapeHtml(inv.id)}</strong>
+            <div>Issue Date: ${escapeHtml(inv.issueDate)}</div>
+            <div>Due Date: ${escapeHtml(inv.dueDate)}</div>
+            <div style="margin-top:0.4rem;"><span class="inv-status inv-status--${inv.status}">${escapeHtml(inv.status)}</span></div>
+          </div>
+        </div>
+
+        <div class="inv-print__client">
+          <div class="inv-print__client-label">Bill To</div>
+          <div class="inv-print__client-name">${escapeHtml(inv.clientName)}</div>
+          <div class="inv-print__client-email">${escapeHtml(inv.clientEmail || '—')}</div>
+        </div>
+
+        <table class="inv-print__table">
+          <thead>
+            <tr>
+              <th>Description</th>
+              <th>Qty</th>
+              <th>Rate</th>
+              <th>Amount</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${itemsHtml || '<tr><td colspan="4" style="text-align:center;color:var(--text-muted);padding:1rem;">No items</td></tr>'}
+            <tr class="inv-print__total-row">
+              <td colspan="3">Subtotal</td>
+              <td>₹ ${inv.subtotal?.toFixed(2) || '0.00'}</td>
+            </tr>
+            <tr class="inv-print__total-row">
+              <td colspan="3">Tax (${inv.taxRate || 0}%)</td>
+              <td>₹ ${inv.taxAmount?.toFixed(2) || '0.00'}</td>
+            </tr>
+            <tr class="inv-print__grand-row">
+              <td colspan="3">Total</td>
+              <td>₹ ${inv.total?.toFixed(2) || '0.00'}</td>
+            </tr>
+          </tbody>
+        </table>
+
+        ${inv.notes ? `
+          <div class="inv-print__notes">
+            <div class="inv-print__notes-label">Notes</div>
+            <div>${escapeHtml(inv.notes).replace(/\n/g, '<br>')}</div>
+          </div>
+        ` : ''}
+      </div>
+    `;
+
+    invPreviewOverlay.classList.add('active');
+  };
+
+  invPreviewClose.addEventListener('click', () => invPreviewOverlay.classList.remove('active'));
+  invPreviewOverlay.addEventListener('click', e => {
+    if (e.target === invPreviewOverlay) invPreviewOverlay.classList.remove('active');
+  });
+  invPreviewPrint.addEventListener('click', () => window.print());
 
   // ── Utils ──────────────────────────────────────────────────────────────────
   function escapeHtml(str) {
