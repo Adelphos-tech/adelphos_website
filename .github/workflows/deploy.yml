@@ -30,6 +30,23 @@ jobs:
             git status
             echo "=== Verifying blog files ==="
             ls -la blog/ | head -20
+            echo "=== Updating .env secrets ==="
+            if [ -n "${{ secrets.GROQ_API_KEY }}" ]; then
+              if ! grep -q "GROQ_API_KEY=" .env; then
+                echo "GROQ_API_KEY=${{ secrets.GROQ_API_KEY }}" >> .env
+                echo "Added GROQ_API_KEY to .env"
+              else
+                sed -i "s|GROQ_API_KEY=.*|GROQ_API_KEY=${{ secrets.GROQ_API_KEY }}|" .env
+                echo "Updated GROQ_API_KEY in .env"
+              fi
+            fi
+            if [ -n "${{ secrets.GROQ_MODEL }}" ]; then
+              if ! grep -q "GROQ_MODEL=" .env; then
+                echo "GROQ_MODEL=${{ secrets.GROQ_MODEL }}" >> .env
+              else
+                sed -i "s|GROQ_MODEL=.*|GROQ_MODEL=${{ secrets.GROQ_MODEL }}|" .env
+              fi
+            fi
             echo "=== Installing deps ==="
             npm install --production
             echo "=== Restarting server ==="
